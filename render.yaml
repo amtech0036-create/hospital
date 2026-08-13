@@ -1,0 +1,28 @@
+# Render Blueprint — free web service for testing
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: inventory-erp
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: DB_DRIVER
+        value: googlesheets
+      - key: BACKUP_DRIVE_AUTO_HOURS
+        value: "0"
+      - key: CORS_ORIGIN
+        value: "*"
+      # Set these manually in the Render dashboard after deploy:
+      # GOOGLE_SHEETS_SPREADSHEET_ID
+      # GOOGLE_SERVICE_ACCOUNT_EMAIL
+      # GOOGLE_PRIVATE_KEY
+      # BACKUP_DRIVE_FOLDER_ID (optional)

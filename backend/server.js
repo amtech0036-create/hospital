@@ -45,8 +45,8 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(env.PORT, () => {
-  logger.info(`Server running on http://localhost:${env.PORT} [${env.NODE_ENV}]`);
+app.listen(env.PORT, '0.0.0.0', () => {
+  logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
   logger.info(`DB driver: ${env.DB_DRIVER}`);
   startBackupScheduler();
 });

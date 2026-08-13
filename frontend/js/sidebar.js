@@ -55,7 +55,7 @@ function renderSidebar(activeHref) {
 
   container.innerHTML = `
     <div class="brand">
-      <span class="brand-text">Inventory ERP</span>
+      <span class="brand-text">A&M Tech Solutions-ERP</span>
       <button type="button" class="erp-sidebar-close" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
     </div>
     <div class="erp-sidebar-scroll-wrap">
