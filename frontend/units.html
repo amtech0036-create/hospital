@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Units — Inventory ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+    <div id="lookupAlert" class="alert alert-danger d-none"></div>
+
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">Units</h6>
+        <button class="btn btn-primary btn-sm" id="addBtn">+ Add Unit</button>
+      </div>
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr><th>Name</th><th>Short Name</th><th>Status</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody id="lookupTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal fade" id="lookupModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="lookupForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="lookupModalTitle">Add Unit</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" id="lookupName" placeholder="e.g. Piece, Box, Kilogram" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Short Name</label>
+              <input type="text" class="form-control" id="lookupShortName" placeholder="e.g. pcs, box, kg" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/lookupPage.js"></script>
+  <script src="js/units.js"></script>
+</body>
+</html>

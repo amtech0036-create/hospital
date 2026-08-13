@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Challans — Inventory ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+    <div id="challanAlert" class="alert alert-danger d-none"></div>
+    <div id="challanSuccess" class="alert alert-success d-none"></div>
+
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><button class="nav-link active" data-tab="newTab">New Challan</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="listTab">Challan History</button></li>
+    </ul>
+
+    <div id="newTab" class="tab-pane">
+      <div class="stat-card">
+        <form id="challanForm">
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Customer</label>
+              <div id="customerSearchMount"></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Link to Sale (optional)</label>
+              <div id="saleSearchMount"></div>
+              <div class="form-text">If linked, stock is not deducted again.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Challan Date</label>
+              <input type="datetime-local" class="form-control" id="challanDate" />
+            </div>
+          </div>
+          <div class="table-responsive mb-2">
+            <table class="table align-middle">
+              <thead><tr><th>Product</th><th>Qty</th><th></th></tr></thead>
+              <tbody id="lineItemsBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="addLineBtn">+ Add Line</button>
+          <div class="mb-3">
+            <label class="form-label">Note</label>
+            <textarea class="form-control" id="note" rows="2"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Create Challan</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="listTab" class="tab-pane d-none">
+      <div class="stat-card">
+        <table class="table table-hover align-middle">
+          <thead><tr><th>Challan #</th><th>Date</th><th>Customer</th><th>Sale</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+          <tbody id="challanTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="challanModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="challanModalTitle">Challan</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="challanModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="challanPrintBtn">Print</button>
+          <button type="button" class="btn btn-outline-primary" id="challanPdfBtn">Download PDF</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/searchSelect.js"></script>
+  <script src="js/companySettings.js"></script>
+  <script src="js/challanDocument.js"></script>
+  <script src="js/challans.js"></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employees — Inventory ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+    <div id="employeeAlert" class="alert alert-danger d-none"></div>
+    <div id="employeeSuccess" class="alert alert-success d-none"></div>
+
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><button class="nav-link active" data-tab="listTab">Employees</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="payrollTab">Payroll</button></li>
+    </ul>
+
+    <div id="listTab" class="tab-pane">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h6 class="mb-0">Employees</h6>
+          <div class="d-flex gap-2">
+            <input type="search" class="form-control form-control-sm" id="searchInput" placeholder="Search name, phone, designation..." style="width:260px" />
+            <button class="btn btn-primary btn-sm" id="addBtn">+ Add Employee</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Designation</th><th>Join Date</th><th>Salary</th><th>Status</th><th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="payrollTab" class="tab-pane d-none">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="stat-card mb-3">
+            <h6 class="mb-3">Process Salary</h6>
+            <form id="payrollForm">
+              <div class="mb-3">
+                <label class="form-label">Employee</label>
+                <div id="payrollEmployeeSearchMount"></div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Pay Month</label>
+                <input type="month" class="form-control" id="payrollPayMonth" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Base Salary (৳)</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="payrollBaseSalary" value="0" required />
+              </div>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label">Bonus (৳)</label>
+                  <input type="number" step="0.01" min="0" class="form-control" id="payrollBonus" value="0" />
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Deductions (৳)</label>
+                  <input type="number" step="0.01" min="0" class="form-control" id="payrollDeductions" value="0" />
+                </div>
+              </div>
+              <div class="mb-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Net Pay</span>
+                <span class="fs-5 fw-bold text-primary" id="payrollNetPayLabel">৳0.00</span>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <select class="form-select" id="payrollPaymentMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="Bank">Bank</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Note</label>
+                <textarea class="form-control" id="payrollNote" rows="2" placeholder="Advance deduction, overtime, etc."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Process & Pay Salary</button>
+            </form>
+          </div>
+          <div class="stat-card">
+            <h6 class="mb-3">Bulk Payroll</h6>
+            <form id="payrollBulkForm">
+              <div class="mb-3">
+                <label class="form-label">Pay Month</label>
+                <input type="month" class="form-control" id="payrollBulkMonth" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <select class="form-select" id="payrollBulkPaymentMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="Bank">Bank</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Note</label>
+                <textarea class="form-control" id="payrollBulkNote" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn btn-outline-primary w-100">Pay All Active Employees</button>
+              <div class="form-text mt-2">Uses each employee's monthly salary. Skips employees already paid or with salary 0.</div>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="stat-card">
+            <h6 class="mb-3">Payroll History</h6>
+            <div class="row g-2 mb-3 align-items-end">
+              <div class="col-auto">
+                <label class="form-label small mb-0">Month</label>
+                <input type="month" class="form-control form-control-sm" id="payrollMonthFilter" />
+              </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="payrollMonthFilterClear">Clear</button>
+              </div>
+              <div class="col-auto">
+                <label class="form-label small mb-0">From</label>
+                <input type="date" class="form-control form-control-sm" id="payrollDateFrom" />
+              </div>
+              <div class="col-auto">
+                <label class="form-label small mb-0">To</label>
+                <input type="date" class="form-control form-control-sm" id="payrollDateTo" />
+              </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="payrollDateClear">Clear Dates</button>
+              </div>
+            </div>
+            <div id="payrollDateSummary" class="alert alert-info py-2 mb-3 d-none small"></div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead>
+                  <tr><th>Payroll #</th><th>Month</th><th>Employee</th><th>Base</th><th>Bonus</th><th>Deduct</th><th>Net Pay</th><th>Method</th></tr>
+                </thead>
+                <tbody id="payrollHistoryBody">
+                  <tr><td colspan="8" class="text-center text-muted py-4">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="employeeModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="employeeForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="employeeModalTitle">Add Employee</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" id="e_name" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-control" id="e_phone" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="e_email" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" id="e_address" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Designation</label>
+              <input type="text" class="form-control" id="e_designation" list="designationList" placeholder="e.g. Sales Staff, Accountant" />
+              <datalist id="designationList">
+                <option value="Manager"></option>
+                <option value="Sales Staff"></option>
+                <option value="Accountant"></option>
+                <option value="Warehouse Staff"></option>
+                <option value="Driver"></option>
+                <option value="Office Staff"></option>
+              </datalist>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Join Date</label>
+              <input type="date" class="form-control" id="e_joinDate" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Monthly Salary (৳)</label>
+              <input type="number" step="0.01" min="0" class="form-control" id="e_salary" value="0" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Note</label>
+              <textarea class="form-control" id="e_note" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/searchSelect.js"></script>
+  <script src="js/dateRangeFilter.js"></script>
+  <script src="js/payroll.js"></script>
+  <script src="js/employees.js"></script>
+</body>
+</html>
