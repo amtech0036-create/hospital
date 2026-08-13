@@ -7,10 +7,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const alertBox = document.getElementById('settingsAlert');
   const successBox = document.getElementById('settingsSuccess');
   const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+  const resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
   const userForm = document.getElementById('userForm');
+  const resetPasswordForm = document.getElementById('resetPasswordForm');
   const currentUser = getCurrentUser();
   const isAdmin = currentUser?.role === 'Admin';
   let editingUserId = null;
+  let resettingUserId = null;
   let allUsers = [];
 
   function showError(err) {
@@ -177,12 +180,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td>${u.role}</td>
         <td><span class="badge ${u.status === 'Active' ? 'bg-success' : 'bg-secondary'}">${u.status}</span></td>
         <td class="text-end">
-          <button class="btn btn-sm btn-outline-primary" data-edit-user="${u.id}">Edit</button>
-          ${
-            u.id !== currentUser?.id && u.status === 'Active'
-              ? `<button class="btn btn-sm btn-outline-danger" data-deactivate-user="${u.id}">Deactivate</button>`
-              : ''
-          }
+          <div class="d-flex flex-wrap gap-1 justify-content-end">
+            <button class="btn btn-sm btn-outline-secondary" data-reset-password="${u.id}">Reset password</button>
+            <button class="btn btn-sm btn-outline-primary" data-edit-user="${u.id}">Edit</button>
+            ${
+              u.id !== currentUser?.id && u.status === 'Active'
+                ? `<button class="btn btn-sm btn-outline-danger" data-deactivate-user="${u.id}">Deactivate</button>`
+                : ''
+            }
+          </div>
         </td>
       </tr>`
       )
@@ -190,6 +196,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     body.querySelectorAll('[data-edit-user]').forEach((btn) =>
       btn.addEventListener('click', () => openEditUser(btn.dataset.editUser))
+    );
+    body.querySelectorAll('[data-reset-password]').forEach((btn) =>
+      btn.addEventListener('click', () => openResetPassword(btn.dataset.resetPassword))
     );
     body.querySelectorAll('[data-deactivate-user]').forEach((btn) =>
       btn.addEventListener('click', () => deactivateUser(btn.dataset.deactivateUser))
@@ -221,6 +230,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('u_statusGroup').classList.remove('d-none');
     userModal.show();
   }
+
+  function openResetPassword(id) {
+    const u = allUsers.find((x) => x.id === id);
+    if (!u) return;
+    resettingUserId = id;
+    resetPasswordForm.reset();
+    document.getElementById('resetPasswordUserLabel').textContent = `${u.name} (${u.email})`;
+    resetPasswordModal.show();
+    setTimeout(() => document.getElementById('rp_password').focus(), 200);
+  }
+
+  resetPasswordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAlerts();
+    const password = document.getElementById('rp_password').value;
+    const confirmPassword = document.getElementById('rp_password_confirm').value;
+
+    if (!password || password.length < 6) {
+      showError(new Error('Password must be at least 6 characters.'));
+      return;
+    }
+    if (password !== confirmPassword) {
+      showError(new Error('Passwords do not match.'));
+      return;
+    }
+
+    try {
+      await apiRequest(`/settings/users/${resettingUserId}`, {
+        method: 'PUT',
+        body: { password }
+      });
+      resetPasswordModal.hide();
+      showSuccess('Password reset successfully. Share the new password with the user securely.');
+    } catch (err) {
+      showError(err);
+    }
+  });
 
   async function deactivateUser(id) {
     if (!confirm('Deactivate this user? They will not be able to log in.')) return;

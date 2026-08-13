@@ -66,10 +66,61 @@ function mountSearchSelect(mountEl, opts = {}) {
       .slice(0, 50);
   }
 
+  function closeDropdown() {
+    dropdown.classList.remove('search-select-dropdown--open');
+    dropdown.classList.add('d-none');
+    root.classList.remove('search-select-open');
+    activeIndex = -1;
+    dropdown.style.top = '';
+    dropdown.style.left = '';
+    dropdown.style.width = '';
+    dropdown.style.maxWidth = '';
+    dropdown.style.maxHeight = '';
+    dropdown.style.bottom = '';
+  }
+
+  function positionDropdown() {
+    const rect = input.getBoundingClientRect();
+    const viewportPad = 8;
+    const minWidth = Math.min(Math.max(rect.width, 260), window.innerWidth - viewportPad * 2);
+    const left = Math.min(
+      Math.max(viewportPad, rect.left),
+      window.innerWidth - minWidth - viewportPad
+    );
+    const maxHeight = 240;
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPad;
+    const spaceAbove = rect.top - viewportPad;
+    const openUp = spaceBelow < 140 && spaceAbove > spaceBelow;
+
+    dropdown.style.position = 'fixed';
+    dropdown.style.left = `${left}px`;
+    dropdown.style.width = `${minWidth}px`;
+    dropdown.style.maxWidth = `${window.innerWidth - viewportPad * 2}px`;
+    dropdown.style.right = 'auto';
+    dropdown.style.zIndex = '1065';
+
+    if (openUp) {
+      dropdown.style.top = 'auto';
+      dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+      dropdown.style.maxHeight = `${Math.min(maxHeight, spaceAbove)}px`;
+    } else {
+      dropdown.style.bottom = 'auto';
+      dropdown.style.top = `${rect.bottom + 4}px`;
+      dropdown.style.maxHeight = `${Math.min(maxHeight, spaceBelow)}px`;
+    }
+  }
+
+  function openDropdown() {
+    dropdown.classList.remove('d-none');
+    dropdown.classList.add('search-select-dropdown--open');
+    root.classList.add('search-select-open');
+    positionDropdown();
+  }
+
   function renderDropdown(list) {
     if (!list.length) {
       dropdown.innerHTML = '<div class="search-select-empty">No matches found</div>';
-      dropdown.classList.remove('d-none');
+      openDropdown();
       return;
     }
     dropdown.innerHTML = list
@@ -81,7 +132,7 @@ function mountSearchSelect(mountEl, opts = {}) {
         </button>`;
       })
       .join('');
-    dropdown.classList.remove('d-none');
+    openDropdown();
 
     dropdown.querySelectorAll('.search-select-option').forEach((btn) => {
       btn.addEventListener('mousedown', (e) => {
@@ -97,11 +148,6 @@ function mountSearchSelect(mountEl, opts = {}) {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
-  }
-
-  function closeDropdown() {
-    dropdown.classList.add('d-none');
-    activeIndex = -1;
   }
 
   function selectItem(item) {
@@ -138,17 +184,19 @@ function mountSearchSelect(mountEl, opts = {}) {
   });
 
   input.addEventListener('keydown', (e) => {
-    const options = dropdown.querySelectorAll('.search-select-option');
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (dropdown.classList.contains('d-none')) renderDropdown(filterItems(input.value));
-      activeIndex = Math.min(activeIndex + 1, options.length - 1);
-      renderDropdown(filterItems(input.value));
-      options[activeIndex]?.scrollIntoView({ block: 'nearest' });
+      const list = filterItems(input.value);
+      if (dropdown.classList.contains('d-none')) renderDropdown(list);
+      activeIndex = Math.min(activeIndex + 1, list.length - 1);
+      renderDropdown(list);
+      dropdown.querySelectorAll('.search-select-option')[activeIndex]?.scrollIntoView({ block: 'nearest' });
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      const list = filterItems(input.value);
       activeIndex = Math.max(activeIndex - 1, 0);
-      renderDropdown(filterItems(input.value));
+      renderDropdown(list);
+      dropdown.querySelectorAll('.search-select-option')[activeIndex]?.scrollIntoView({ block: 'nearest' });
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const opt = dropdown.querySelectorAll('.search-select-option')[activeIndex];
@@ -159,9 +207,17 @@ function mountSearchSelect(mountEl, opts = {}) {
   });
 
   document.addEventListener('click', onDocClick);
+
   function onDocClick(e) {
     if (!root.contains(e.target)) closeDropdown();
   }
+
+  function onReposition() {
+    if (!dropdown.classList.contains('d-none')) positionDropdown();
+  }
+
+  window.addEventListener('resize', onReposition);
+  window.addEventListener('scroll', onReposition, true);
 
   if (value) {
     const item = findItem(value);
@@ -183,6 +239,8 @@ function mountSearchSelect(mountEl, opts = {}) {
     clear,
     destroy: () => {
       document.removeEventListener('click', onDocClick);
+      window.removeEventListener('resize', onReposition);
+      window.removeEventListener('scroll', onReposition, true);
       mountEl.innerHTML = '';
       mountEl.classList.remove('search-select-wrap');
     }

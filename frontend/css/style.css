@@ -505,25 +505,30 @@ body.sidebar-open {
 /* ---------- Searchable combobox ---------- */
 .search-select {
   position: relative;
+  width: 100%;
+}
+
+.search-select-wrap {
+  width: 100%;
+  min-width: 0;
 }
 
 .search-select-input {
   width: 100%;
+  min-width: 0;
 }
 
 .search-select-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 1050;
+  position: fixed;
+  z-index: 1065;
   max-height: 240px;
+  overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--erp-surface);
   border: 1px solid var(--erp-border);
   border-radius: var(--erp-radius-sm);
-  box-shadow: var(--erp-shadow);
-  margin-top: 4px;
+  box-shadow: var(--erp-shadow-lg);
 }
 
 .search-select-option {
@@ -532,7 +537,7 @@ body.sidebar-open {
   text-align: left;
   border: none;
   background: transparent;
-  padding: 0.55rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
   transition: background-color 0.15s ease;
@@ -552,13 +557,21 @@ body.sidebar-open {
   font-size: 0.9rem;
   color: var(--erp-text);
   font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .search-select-option-sub {
   display: block;
   font-size: 0.75rem;
   color: var(--erp-text-muted);
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .search-select-empty {
@@ -567,12 +580,33 @@ body.sidebar-open {
   color: var(--erp-text-muted);
 }
 
-.search-select-wrap .search-select-dropdown {
-  min-width: 100%;
+td .search-select-wrap,
+.line-product-mount {
+  min-width: 180px;
 }
 
-td .search-select-wrap {
-  min-width: 160px;
+.table-responsive:has(.search-select-open) {
+  overflow: visible;
+}
+
+.stat-card:has(.search-select-open) {
+  overflow: visible;
+}
+
+@media (max-width: 767.98px) {
+  td .search-select-wrap,
+  .line-product-mount {
+    min-width: 140px;
+  }
+
+  .search-select-dropdown {
+    max-height: min(50vh, 280px);
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
 }
 
 /* ---------- Utility ---------- */
