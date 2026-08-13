@@ -7,11 +7,56 @@ This ERP is a **single Node.js app** (API + frontend). Best free option for test
 | **Render** | Yes — 750 hrs/month | **Recommended** |
 | Railway | Limited trial credits | Works, paid after trial |
 | Fly.io | Small free allowance | More setup |
-| Vercel/Netlify | Frontend only | Not ideal (needs Node API) |
+| **Vercel** | Yes — static hosting | **Frontend** (use with Render API) |
+| Netlify | Yes — static hosting | Frontend only |
 
 ---
 
-## Option 1 — Render (recommended)
+## Split deploy: Vercel (frontend) + Render (API) — recommended for production UI
+
+Keep the **Node API on Render** and serve **only the `frontend/` folder on Vercel** for a faster, always-on UI.
+
+### 1. Render — API only
+
+Your backend is already at `https://a-m-tech-erp.onrender.com`. In Render **Environment**, set:
+
+| Key | Value |
+|-----|--------|
+| `CORS_ORIGIN` | Your Vercel URL(s), comma-separated, e.g. `https://your-app.vercel.app` |
+
+Redeploy Render after changing `CORS_ORIGIN`.
+
+### 2. Vercel — frontend
+
+1. Sign up at [https://vercel.com](https://vercel.com) and **Import** your GitHub repo.
+2. Project settings:
+
+| Setting | Value |
+|---------|--------|
+| **Framework Preset** | Other |
+| **Root Directory** | `.` (repo root) |
+| **Build Command** | `node scripts/generate-frontend-config.js` |
+| **Output Directory** | `frontend` |
+
+(These are also defined in `vercel.json` at the repo root.)
+
+3. **Environment variable** (Vercel → Settings → Environment Variables):
+
+| Key | Value |
+|-----|--------|
+| `ERP_API_URL` | `https://a-m-tech-erp.onrender.com/api` |
+
+4. Deploy. Your app will be at `https://your-project.vercel.app/login.html`.
+
+### 3. After deploy
+
+- Open the **Vercel** URL for daily use (no cold start on static pages).
+- Render still handles `/api/*`; the frontend calls it via `frontend/js/config.js` (generated at build time).
+- Log in with the same credentials you use on Render.
+
+---
+
+## Option 1 — Render (all-in-one, simplest for testing)
 
 ### 1. Push code to GitHub
 

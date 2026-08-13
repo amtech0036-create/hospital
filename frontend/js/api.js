@@ -3,7 +3,7 @@
  * Keeps the base URL, auth header, and error handling in one place
  * so page-specific scripts stay small.
  */
-const API_BASE_URL = '/api';
+const API_BASE_URL = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE_URL) || '/api';
 
 function getToken() {
   return localStorage.getItem('erp_token');

@@ -10,6 +10,24 @@ const { notFound, errorHandler } = require('./middleware/error.middleware');
 const logger = require('./utils/logger');
 const { startBackupScheduler } = require('./jobs/backupScheduler');
 
+function getCorsOptions() {
+  const raw = env.CORS_ORIGIN || '*';
+  if (raw === '*') {
+    return { origin: true, credentials: true };
+  }
+  const allowed = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return {
+    origin(origin, callback) {
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+      }
+    },
+    credentials: true
+  };
+}
+
 const app = express();
 
 // helmet's default Content-Security-Policy only allows same-origin
@@ -30,7 +48,7 @@ app.use(
     }
   })
 );
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors(getCorsOptions()));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.isProduction() ? 'combined' : 'dev'));
