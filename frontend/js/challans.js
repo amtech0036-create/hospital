@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     lineItemsBody.appendChild(tr);
   }
 
+  document.getElementById('addLineBtn').addEventListener('click', addLine);
+
   async function loadLookups() {
     const [custRes, prodRes, salesRes] = await Promise.all([
       apiRequest('/customers?status=Active'),
