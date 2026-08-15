@@ -233,6 +233,197 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchTimer = setTimeout(() => loadProducts(e.target.value.trim()), 300);
   });
 
+  // ---- Bulk Import Excel Logic ----
+  const importModalEl = document.getElementById('importModal');
+  const importModal = new bootstrap.Modal(importModalEl);
+  const importAlert = document.getElementById('importAlert');
+  const importSuccessAlert = document.getElementById('importSuccessAlert');
+  const excelFileInput = document.getElementById('excelFileInput');
+  const previewContainer = document.getElementById('previewContainer');
+  const previewTableBody = document.getElementById('importPreviewTableBody');
+  const submitImportBtn = document.getElementById('submitImportBtn');
+  const validRowCountBadge = document.getElementById('validRowCountBadge');
+  const parsedRowCountSpan = document.getElementById('parsedRowCount');
+
+  let validParsedRows = [];
+
+  function showImportError(msg) {
+    importAlert.textContent = msg;
+    importAlert.classList.remove('d-none');
+    importSuccessAlert.classList.add('d-none');
+  }
+
+  function clearImportAlerts() {
+    importAlert.classList.add('d-none');
+    importSuccessAlert.classList.add('d-none');
+  }
+
+  document.getElementById('importExcelBtn').addEventListener('click', () => {
+    excelFileInput.value = '';
+    previewContainer.classList.add('d-none');
+    submitImportBtn.disabled = true;
+    validParsedRows = [];
+    clearImportAlerts();
+    importModal.show();
+  });
+
+  // Download Sample Excel Template
+  document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') {
+      alert('Excel library not loaded. Please refresh your browser page.');
+      return;
+    }
+    const sampleData = [
+      {
+        'Name': 'Wireless Ergonomic Mouse',
+        'SKU': 'ELE-0010',
+        'Category': 'Electronics',
+        'Brand': 'Logitech',
+        'Unit': 'Pcs',
+        'Purchase Price': 500,
+        'Selling Price': 650,
+        'Minimum Stock': 5,
+        'Opening Stock': 20,
+        'Description': '2.4GHz optical wireless mouse'
+      },
+      {
+        'Name': 'RGB Mechanical Keyboard',
+        'SKU': 'ELE-0011',
+        'Category': 'Electronics',
+        'Brand': 'Logitech',
+        'Unit': 'Pcs',
+        'Purchase Price': 1500,
+        'Selling Price': 1950,
+        'Minimum Stock': 3,
+        'Opening Stock': 10,
+        'Description': 'Tactile mechanical switch keyboard'
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(sampleData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
+    XLSX.writeFile(workbook, 'products_import_template.xlsx');
+  });
+
+  // Read & Preview Uploaded Excel File
+  excelFileInput.addEventListener('change', (e) => {
+    clearImportAlerts();
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (typeof XLSX === 'undefined') {
+      showImportError('SheetJS library is loading or blocked. Please refresh the page.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (!rawRows || rawRows.length === 0) {
+          showImportError('The selected file contains no rows or readable data.');
+          previewContainer.classList.add('d-none');
+          submitImportBtn.disabled = true;
+          return;
+        }
+
+        renderImportPreview(rawRows);
+      } catch (err) {
+        showImportError('Failed to parse Excel file: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  function renderImportPreview(rows) {
+    validParsedRows = [];
+    previewTableBody.innerHTML = '';
+    parsedRowCountSpan.textContent = rows.length;
+
+    rows.forEach((row, idx) => {
+      const name = (row.Name || row.name || row['Product Name'] || '').toString().trim();
+      const sku = (row.SKU || row.sku || '').toString().trim();
+      const category = (row.Category || row.category || '').toString().trim();
+      const brand = (row.Brand || row.brand || '').toString().trim();
+      const purchasePrice = parseFloat(row['Purchase Price'] ?? row.purchasePrice);
+      const sellingPrice = parseFloat(row['Selling Price'] ?? row.sellingPrice);
+      const openingStock = parseFloat(row['Opening Stock'] ?? row.openingStock) || 0;
+
+      let isValid = true;
+      let statusBadge = '<span class="badge bg-success">Ready</span>';
+
+      if (!name) {
+        isValid = false;
+        statusBadge = '<span class="badge bg-danger">Missing Name</span>';
+      } else if (isNaN(purchasePrice) || purchasePrice < 0) {
+        isValid = false;
+        statusBadge = '<span class="badge bg-danger">Invalid Price</span>';
+      }
+
+      if (isValid) {
+        validParsedRows.push(row);
+      }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${statusBadge}</td>
+        <td class="fw-bold">${name || '<i class="text-muted">Empty</i>'}</td>
+        <td>${sku || '<i class="text-muted">Auto</i>'}</td>
+        <td>${category || '—'}</td>
+        <td>${brand || '—'}</td>
+        <td>${!isNaN(purchasePrice) ? '৳' + purchasePrice.toLocaleString() : '<span class="text-danger">Required</span>'}</td>
+        <td>${!isNaN(sellingPrice) ? '৳' + sellingPrice.toLocaleString() : 'Auto Markup'}</td>
+        <td>${openingStock}</td>
+      `;
+      previewTableBody.appendChild(tr);
+    });
+
+    validRowCountBadge.textContent = `${validParsedRows.length} Ready to Import`;
+    previewContainer.classList.remove('d-none');
+    submitImportBtn.disabled = validParsedRows.length === 0;
+  }
+
+  // Submit Bulk Import to Backend API
+  submitImportBtn.addEventListener('click', async () => {
+    if (validParsedRows.length === 0) return;
+    clearImportAlerts();
+    submitImportBtn.disabled = true;
+    submitImportBtn.textContent = 'Importing...';
+
+    try {
+      const res = await apiRequest('/products/bulk-import', {
+        method: 'POST',
+        body: { products: validParsedRows }
+      });
+
+      const { insertedCount, skippedCount, errors } = res.data;
+      importSuccessAlert.textContent = `Successfully imported ${insertedCount} products! ${skippedCount > 0 ? `(${skippedCount} skipped due to errors)` : ''}`;
+      importSuccessAlert.classList.remove('d-none');
+
+      if (errors && errors.length > 0) {
+        const errMsgs = errors.map((e) => `Row ${e.row}: ${e.error}`).join('<br>');
+        importAlert.innerHTML = `<b>Import Warnings:</b><br>${errMsgs}`;
+        importAlert.classList.remove('d-none');
+      }
+
+      setTimeout(() => {
+        importModal.hide();
+        loadProducts();
+      }, 1500);
+    } catch (err) {
+      showImportError(err.message || 'Bulk import failed.');
+    } finally {
+      submitImportBtn.disabled = false;
+      submitImportBtn.textContent = 'Import Valid Products';
+    }
+  });
+
   // ---- Init ----
   try {
     await loadLookups();

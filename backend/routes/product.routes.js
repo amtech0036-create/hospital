@@ -21,4 +21,6 @@ router.delete('/:id/permanent', authorize('Admin'), controller.removePermanent);
 router.post('/bulk-markup/preview', authorize('Admin', 'Manager'), bulkMarkupRules, validate, controller.previewBulkMarkup);
 router.post('/bulk-markup/apply', authorize('Admin', 'Manager'), bulkMarkupRules, validate, controller.applyBulkMarkup);
 
+router.post('/bulk-import', authorize('Admin', 'Manager'), controller.bulkImport);
+
 module.exports = router;

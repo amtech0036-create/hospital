@@ -287,6 +287,151 @@ class ProductService {
     }
     return results;
   }
+
+  async bulkImport(items = []) {
+    if (!Array.isArray(items) || items.length === 0) {
+      const err = new Error('No items provided for bulk import.');
+      err.status = 400;
+      throw err;
+    }
+
+    const { brandRepository, unitRepository } = require('../repositories');
+    const categories = await categoryRepository.findAll();
+    const brands = await brandRepository.findAll();
+    const units = await unitRepository.findAll();
+
+    const categoryMap = new Map();
+    categories.forEach((c) => {
+      if (c.name) categoryMap.set(c.name.trim().toLowerCase(), c.id);
+      if (c.id) categoryMap.set(c.id.trim().toLowerCase(), c.id);
+    });
+
+    const brandMap = new Map();
+    brands.forEach((b) => {
+      if (b.name) brandMap.set(b.name.trim().toLowerCase(), b.id);
+      if (b.id) brandMap.set(b.id.trim().toLowerCase(), b.id);
+    });
+
+    const unitMap = new Map();
+    units.forEach((u) => {
+      if (u.name) unitMap.set(u.name.trim().toLowerCase(), u.id);
+      if (u.id) unitMap.set(u.id.trim().toLowerCase(), u.id);
+    });
+
+    const results = {
+      insertedCount: 0,
+      skippedCount: 0,
+      errors: []
+    };
+
+    for (let i = 0; i < items.length; i++) {
+      const row = items[i];
+      const name = (row.name || row.Name || '').trim();
+      if (!name) {
+        results.skippedCount++;
+        results.errors.push({ row: i + 1, error: 'Product name is required.' });
+        continue;
+      }
+
+      const purchasePrice = parseFloat(row.purchasePrice ?? row['Purchase Price']);
+      if (isNaN(purchasePrice) || purchasePrice < 0) {
+        results.skippedCount++;
+        results.errors.push({ row: i + 1, product: name, error: 'Valid purchase price is required.' });
+        continue;
+      }
+
+      const rawCategory = row.category || row.Category || '';
+      let categoryId = '';
+      if (rawCategory) {
+        const catKey = String(rawCategory).trim().toLowerCase();
+        if (categoryMap.has(catKey)) {
+          categoryId = categoryMap.get(catKey);
+        } else {
+          try {
+            const newCat = await categoryRepository.create({ name: String(rawCategory).trim() });
+            categoryId = newCat.id;
+            categoryMap.set(catKey, categoryId);
+          } catch (e) {
+            categoryId = '';
+          }
+        }
+      }
+
+      const rawBrand = row.brand || row.Brand || '';
+      let brandId = '';
+      if (rawBrand) {
+        const brandKey = String(rawBrand).trim().toLowerCase();
+        if (brandMap.has(brandKey)) {
+          brandId = brandMap.get(brandKey);
+        } else {
+          try {
+            const newBrand = await brandRepository.create({ name: String(rawBrand).trim() });
+            brandId = newBrand.id;
+            brandMap.set(brandKey, brandId);
+          } catch (e) {
+            brandId = '';
+          }
+        }
+      }
+
+      const rawUnit = row.unit || row.Unit || '';
+      let unitId = '';
+      if (rawUnit) {
+        const unitKey = String(rawUnit).trim().toLowerCase();
+        if (unitMap.has(unitKey)) {
+          unitId = unitMap.get(unitKey);
+        } else {
+          try {
+            const newUnit = await unitRepository.create({ name: String(rawUnit).trim(), code: String(rawUnit).trim().toUpperCase() });
+            unitId = newUnit.id;
+            unitMap.set(unitKey, unitId);
+          } catch (e) {
+            unitId = '';
+          }
+        }
+      }
+
+      const sellingPriceVal = parseFloat(row.sellingPrice ?? row['Selling Price']);
+      let pricingMethod = PRICING_METHODS.PERCENTAGE_MARKUP;
+      let markupPercentage = parseFloat(row.markupPercentage ?? row['Markup %']) || DEFAULT_MARKUP_PERCENTAGE;
+
+      if (!isNaN(sellingPriceVal) && sellingPriceVal >= purchasePrice) {
+        pricingMethod = PRICING_METHODS.FIXED_SELLING_PRICE;
+      }
+
+      const rawSku = row.sku || row.SKU || '';
+      const rawDesc = row.description || row.Description || '';
+      const rawMinStock = row.minimumStock ?? row['Minimum Stock'];
+      const rawOpStock = row.openingStock ?? row['Opening Stock'];
+      const rawBatch = row.batchNumber || row['Batch Number'] || '';
+      const rawExpiry = row.expiryDate || row['Expiry Date'] || '';
+
+      try {
+        await this.create({
+          sku: rawSku ? String(rawSku).trim() : '',
+          name,
+          categoryId,
+          brandId,
+          unitId,
+          description: rawDesc,
+          purchasePrice,
+          pricingMethod,
+          markupPercentage,
+          sellingPrice: !isNaN(sellingPriceVal) ? sellingPriceVal : undefined,
+          minimumStock: parseFloat(rawMinStock) || 0,
+          openingStock: parseFloat(rawOpStock) || 0,
+          batchNumber: rawBatch ? String(rawBatch).trim() : '',
+          expiryDate: rawExpiry ? String(rawExpiry).trim() : ''
+        });
+        results.insertedCount++;
+      } catch (err) {
+        results.skippedCount++;
+        results.errors.push({ row: i + 1, product: name, error: err.message });
+      }
+    }
+
+    return results;
+  }
 }
 
 module.exports = new ProductService();

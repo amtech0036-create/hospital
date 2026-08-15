@@ -54,4 +54,10 @@ const applyBulkMarkup = asyncHandler(async (req, res) => {
   return success(res, { message: 'Bulk markup applied.', data: results });
 });
 
-module.exports = { list, getOne, create, update, remove, removePermanent, priceHistory, previewBulkMarkup, applyBulkMarkup };
+const bulkImport = asyncHandler(async (req, res) => {
+  const products = req.body.products || [];
+  const result = await ProductService.bulkImport(products);
+  return success(res, { message: `Bulk import completed. Successfully imported ${result.insertedCount} products.`, data: result });
+});
+
+module.exports = { list, getOne, create, update, remove, removePermanent, priceHistory, previewBulkMarkup, applyBulkMarkup, bulkImport };
