@@ -24,6 +24,9 @@ const env = {
 
   DB_DRIVER: process.env.DB_DRIVER || 'googlesheets',
 
+  MONGODB_URI: process.env.MONGODB_URI || '',
+  MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || 'inventory_erp',
+
   GOOGLE_SHEETS_SPREADSHEET_ID: process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '',
   GOOGLE_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
   GOOGLE_PRIVATE_KEY: (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
@@ -43,6 +46,10 @@ const env = {
     required('GOOGLE_SHEETS_SPREADSHEET_ID');
     required('GOOGLE_SERVICE_ACCOUNT_EMAIL');
     required('GOOGLE_PRIVATE_KEY');
+  },
+
+  assertMongoConfigured() {
+    required('MONGODB_URI');
   }
 };
 

@@ -9,6 +9,19 @@ const apiRoutes = require('./routes');
 const { notFound, errorHandler } = require('./middleware/error.middleware');
 const logger = require('./utils/logger');
 const { startBackupScheduler } = require('./jobs/backupScheduler');
+const { connectMongo, closeMongo } = require('./config/mongoClient');
+
+function isAllowedOrigin(origin, allowed) {
+  if (allowed.includes(origin)) return true;
+  for (const pattern of allowed) {
+    if (!pattern.includes('*')) continue;
+    const regex = new RegExp(
+      '^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]+') + '$'
+    );
+    if (regex.test(origin)) return true;
+  }
+  return false;
+}
 
 function getCorsOptions() {
   const raw = env.CORS_ORIGIN || '*';
@@ -18,7 +31,7 @@ function getCorsOptions() {
   const allowed = raw.split(',').map((s) => s.trim()).filter(Boolean);
   return {
     origin(origin, callback) {
-      if (!origin || allowed.includes(origin)) {
+      if (!origin || isAllowedOrigin(origin, allowed)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -63,10 +76,34 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(env.PORT, '0.0.0.0', () => {
-  logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
-  logger.info(`DB driver: ${env.DB_DRIVER}`);
-  startBackupScheduler();
+async function startServer() {
+  if (env.DB_DRIVER === 'mongo') {
+    await connectMongo();
+  }
+
+  const server = app.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
+    logger.info(`DB driver: ${env.DB_DRIVER}`);
+    startBackupScheduler();
+  });
+
+  async function shutdown(signal) {
+    logger.info(`${signal} received — shutting down`);
+    server.close(async () => {
+      if (env.DB_DRIVER === 'mongo') {
+        await closeMongo();
+      }
+      process.exit(0);
+    });
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
+startServer().catch((err) => {
+  logger.error('Failed to start server:', err.message);
+  process.exit(1);
 });
 
 module.exports = app;
