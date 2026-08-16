@@ -12,13 +12,16 @@ const { startBackupScheduler } = require('./jobs/backupScheduler');
 const { connectMongo, closeMongo } = require('./config/mongoClient');
 
 function isAllowedOrigin(origin, allowed) {
-  if (allowed.includes(origin)) return true;
-  for (const pattern of allowed) {
-    if (!pattern.includes('*')) continue;
-    const regex = new RegExp(
-      '^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]+') + '$'
-    );
-    if (regex.test(origin)) return true;
+  if (!origin) return true;
+  const cleanOrigin = origin.replace(/\/$/, '');
+  for (const item of allowed) {
+    const cleanItem = item.trim().replace(/\/$/, '');
+    if (cleanItem === '*' || cleanItem === cleanOrigin) return true;
+    if (cleanItem.includes('*')) {
+      const pattern = cleanItem.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*');
+      const regex = new RegExp('^' + pattern + '$');
+      if (regex.test(cleanOrigin)) return true;
+    }
   }
   return false;
 }
@@ -34,7 +37,8 @@ function getCorsOptions() {
       if (!origin || isAllowedOrigin(origin, allowed)) {
         callback(null, true);
       } else {
-        callback(new Error(`CORS blocked for origin: ${origin}`));
+        logger.warn(`CORS blocked for origin: ${origin}`);
+        callback(null, false);
       }
     },
     credentials: true
@@ -55,8 +59,8 @@ app.use(
         scriptSrc: ["'self'", 'https://cdn.jsdelivr.net'],
         styleSrc: ["'self'", 'https://cdn.jsdelivr.net', "'unsafe-inline'"],
         fontSrc: ["'self'", 'https://cdn.jsdelivr.net', 'data:'],
-        imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'", 'https://cdn.jsdelivr.net']
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://*.onrender.com', 'https://*.vercel.app']
       }
     }
   })

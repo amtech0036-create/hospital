@@ -31,11 +31,34 @@ async function apiRequest(path, { method = 'GET', body = null, auth = true } = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (netErr) {
+    // Retrying once if GET request fails (e.g. backend waking up from cold start on Render)
+    if (method === 'GET') {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        response = await fetch(`${API_BASE_URL}${path}`, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : undefined
+        });
+      } catch (retryErr) {
+        const error = new Error('Unable to connect to the backend server. The server may be waking up or offline. Please retry in a few seconds.');
+        error.status = 0;
+        throw error;
+      }
+    } else {
+      const error = new Error('Network error. Unable to reach backend server.');
+      error.status = 0;
+      throw error;
+    }
+  }
 
   const json = await response.json().catch(() => ({}));
 
