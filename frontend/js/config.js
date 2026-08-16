@@ -1,13 +1,13 @@
 /**
- * API URL for split deployment (Vercel frontend + Render backend).
- * Overwritten on Vercel build from ERP_API_URL env var.
- * Local dev: uses same-origin /api when running npm start.
+ * API URL configuration.
+ * - Self-hosted (Webuzo, VPS, localhost, cPanel): uses same-origin '/api'.
+ * - Split deployment on Vercel: uses configured remote backend.
  */
 (function () {
   const host = window.location.hostname;
-  const isLocal = host === 'localhost' || host === '127.0.0.1';
+  const isVercel = host.endsWith('.vercel.app');
 
   window.ERP_CONFIG = {
-    API_BASE_URL: isLocal ? '/api' : 'https://a-m-tech-erp.onrender.com/api'
+    API_BASE_URL: isVercel ? 'https://a-m-tech-erp.onrender.com/api' : '/api'
   };
 })();

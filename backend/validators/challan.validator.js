@@ -6,6 +6,10 @@ const challanCreateRules = [
   body('challanDate').optional().isISO8601().withMessage('challanDate must be a valid ISO date.'),
   body('note').optional().trim(),
   body('deductStock').optional().isBoolean().withMessage('deductStock must be boolean.'),
+  body('senderPhone').optional().trim(),
+  body('senderAddress').optional().trim(),
+  body('receiverPhone').optional().trim(),
+  body('receiverAddress').optional().trim(),
   body('items').optional().isArray().withMessage('items must be an array.'),
   body('items.*.productId').optional().trim().notEmpty(),
   body('items.*.quantity').optional().isFloat({ gt: 0 })

@@ -1,7 +1,7 @@
 /**
  * Builds printable invoice HTML and handles print / PDF export.
  */
-function buildInvoiceDocumentHtml(sale, customerLabel, company = {}) {
+function buildInvoiceDocumentHtml(sale, customer, company = {}) {
   const currency = company.currencySymbol || '৳';
   const formatMoney = (n) =>
     currency + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -11,6 +11,10 @@ function buildInvoiceDocumentHtml(sale, customerLabel, company = {}) {
     .map((line) => escapeInvoiceHtml(line))
     .join('<br />');
   const footerNote = company.invoiceFooterNote || '';
+
+  const customerName = typeof customer === 'object' && customer !== null ? customer.name : (customer || '—');
+  const customerAddress = typeof customer === 'object' && customer !== null ? customer.address : '';
+  const customerPhone = typeof customer === 'object' && customer !== null ? customer.phone : '';
 
   const rows = (sale.items || [])
     .map(
@@ -62,7 +66,9 @@ function buildInvoiceDocumentHtml(sale, customerLabel, company = {}) {
     </div>
   </div>
   <div class="meta">
-    <strong>Bill To:</strong> ${escapeInvoiceHtml(customerLabel)}<br />
+    <strong>Bill To:</strong> ${escapeInvoiceHtml(customerName)}<br />
+    ${customerAddress ? `<strong>Address:</strong> ${escapeInvoiceHtml(customerAddress)}<br />` : ''}
+    ${customerPhone ? `<strong>Phone:</strong> ${escapeInvoiceHtml(customerPhone)}<br />` : ''}
     <strong>Paid:</strong> ${formatMoney(sale.amountPaid)} of ${formatMoney(sale.total)}
   </div>
   <table>
@@ -92,8 +98,8 @@ function escapeInvoiceHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-function printInvoice(sale, customerLabel, company = {}) {
-  const html = buildInvoiceDocumentHtml(sale, customerLabel, company);
+function printInvoice(sale, customer, company = {}) {
+  const html = buildInvoiceDocumentHtml(sale, customer, company);
   const win = window.open('', '_blank', 'width=800,height=900');
   if (!win) {
     alert('Please allow pop-ups to print the invoice.');
@@ -108,12 +114,12 @@ function printInvoice(sale, customerLabel, company = {}) {
   };
 }
 
-async function downloadInvoicePdf(sale, customerLabel, company = {}) {
+async function downloadInvoicePdf(sale, customer, company = {}) {
   if (typeof html2pdf === 'undefined') {
     alert('PDF library is still loading. Please try again in a moment.');
     return;
   }
-  const html = buildInvoiceDocumentHtml(sale, customerLabel, company);
+  const html = buildInvoiceDocumentHtml(sale, customer, company);
   const frame = document.createElement('iframe');
   frame.style.cssText = 'position:fixed;left:-9999px;width:800px;height:1100px;border:0';
   document.body.appendChild(frame);

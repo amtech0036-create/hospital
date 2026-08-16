@@ -9,6 +9,10 @@ const COLUMNS = [
   'status',
   'note',
   'deductStock',
+  'senderPhone',
+  'senderAddress',
+  'receiverPhone',
+  'receiverAddress',
   'createdBy',
   'createdAt',
   'updatedAt'

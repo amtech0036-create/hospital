@@ -150,12 +150,76 @@ Then log in at `/login.html`.
 
 ---
 
-## Option 2 — Railway
+## Option 3 — Webuzo Panel (VPS / Dedicated Server)
 
-1. [https://railway.app](https://railway.app) → New Project → Deploy from GitHub
-2. Same env vars as above
-3. Railway sets `PORT` automatically
-4. Free trial credits, then paid
+Webuzo allows running this ERP either via its built-in **NodeJS App Manager** (GUI) or via **SSH + PM2**.
+
+### Prerequisites:
+- Webuzo VPS with Node.js 18+ installed.
+- Domain or Subdomain pointing to your Webuzo server IP (e.g., `erp.yourdomain.com`).
+- A MongoDB Atlas database URI (recommended) or Google Service Account.
+
+### Method A: Webuzo GUI (NodeJS App Manager)
+
+1. **Upload Files:**
+   - In Webuzo **File Manager** (or SFTP), upload the project files to your domain directory (e.g. `/home/username/erp` or `/home/username/public_html/erp`).
+   - Do **not** upload `node_modules`.
+2. **Create `.env` File:**
+   - Create `.env` in the root folder with:
+     ```env
+     PORT=4000
+     NODE_ENV=production
+     CORS_ORIGIN=*
+     JWT_SECRET=your_super_secret_random_string_min_32_chars
+     JWT_EXPIRES_IN=8h
+     DB_DRIVER=mongo
+     MONGODB_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+     MONGODB_DB_NAME=inventory_erp
+     ```
+3. **Setup Node.js App in Webuzo:**
+   - Go to Webuzo Enduser Panel → **Software / Extra Apps** → **Setup Node.js App** (or **NodeJS Selector**).
+   - Click **Create Application**:
+     - **Node.js Version:** `18.x`, `20.x`, or `22.x`
+     - **Application Mode:** `Production`
+     - **Application Root:** `erp` (path to your project)
+     - **Application URL:** `erp.yourdomain.com`
+     - **Application Startup File:** `app.js` or `backend/server.js`
+   - Click **Create / Save**.
+4. **Install Dependencies:**
+   - On the Node.js App page, click **Run NPM Install** (or run `npm install --production` via SSH terminal in the app directory).
+5. **Start Application & Enable SSL:**
+   - Click **Start / Restart Application**.
+   - Go to Webuzo **Security → SSL → Let's Encrypt** and issue a free SSL certificate for your domain.
+   - Access `https://erp.yourdomain.com/login.html`.
+
+### Method B: Webuzo via SSH + PM2 (Recommended for maximum performance)
+
+1. **SSH into server and clone project:**
+   ```bash
+   cd /home/username
+   git clone <your-repo-url> erp
+   cd erp
+   ```
+2. **Install PM2 globally & project dependencies:**
+   ```bash
+   npm install -g pm2
+   npm install --production
+   ```
+3. **Create `.env`:**
+   ```bash
+   cp .env.example .env
+   nano .env
+   # Edit with your production values and save
+   ```
+4. **Start with PM2:**
+   ```bash
+   pm2 start backend/server.js --name "amtech-erp"
+   pm2 save
+   pm2 startup
+   ```
+5. **Reverse Proxy & SSL in Webuzo:**
+   - In Webuzo, map your domain's reverse proxy or Nginx/Apache virtualhost to forward `http://127.0.0.1:4000`.
+   - Issue Let's Encrypt SSL from Webuzo Panel.
 
 ---
 

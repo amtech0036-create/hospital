@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   function customerName(id) {
     return customers.find((c) => c.id === id)?.name || id;
   }
+  function getCustomer(id) {
+    return customers.find((c) => c.id === id) || { name: customerName(id) };
+  }
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
 
   document.getElementById('challanDate').value = toLocalDatetimeValue();
 
@@ -74,14 +84,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('addLineBtn').addEventListener('click', addLine);
 
   async function loadLookups() {
-    const [custRes, prodRes, salesRes] = await Promise.all([
+    const [custRes, prodRes, salesRes, company] = await Promise.all([
       apiRequest('/customers?status=Active'),
       apiRequest('/products?status=Active'),
-      apiRequest('/sales?status=Completed')
+      apiRequest('/sales?status=Completed'),
+      getCompanySettings()
     ]);
     customers = custRes.data;
     products = prodRes.data;
     sales = salesRes.data;
+
+    if (document.getElementById('senderPhone') && !document.getElementById('senderPhone').value) {
+      document.getElementById('senderPhone').value = company?.companyPhone || '';
+    }
+    if (document.getElementById('senderAddress') && !document.getElementById('senderAddress').value) {
+      document.getElementById('senderAddress').value = company?.companyAddress || '';
+    }
 
     customerSearch?.destroy();
     customerSearch = mountSearchSelect(document.getElementById('customerSearchMount'), {
@@ -90,7 +108,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       required: true,
       getLabel: (c) => c.name,
       getValue: (c) => c.id,
-      getSubLabel: (c) => [c.phone, c.email].filter(Boolean).join(' · ')
+      getSubLabel: (c) => [c.phone, c.email].filter(Boolean).join(' · '),
+      onSelect: (c) => {
+        if (c) {
+          document.getElementById('receiverPhone').value = c.phone || '';
+          document.getElementById('receiverAddress').value = c.address || '';
+        }
+      }
     });
 
     saleSearch?.destroy();
@@ -100,7 +124,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       getLabel: (s) => s.id,
       getValue: (s) => s.id,
       getSubLabel: (s) => `${customerName(s.customerId)} · ৳${Number(s.total).toLocaleString()}`,
-      onSelect: (s) => customerSearch.setValue(s.customerId)
+      onSelect: (s) => {
+        customerSearch.setValue(s.customerId);
+        const cust = customers.find((c) => c.id === s.customerId);
+        if (cust) {
+          document.getElementById('receiverPhone').value = cust.phone || '';
+          document.getElementById('receiverAddress').value = cust.address || '';
+        }
+      }
     });
 
     if (!lineItemsBody.children.length) addLine();
@@ -147,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const challan = await fetchChallan(id);
       const company = await getCompanySettings();
-      printChallan(challan, customerName(challan.customerId), company);
+      printChallan(challan, getCustomer(challan.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -157,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const challan = await fetchChallan(id);
       const company = await getCompanySettings();
-      await downloadChallanPdf(challan, customerName(challan.customerId), company);
+      await downloadChallanPdf(challan, getCustomer(challan.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -167,14 +198,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const c = await fetchChallan(id);
       currentChallan = c;
+      const cust = getCustomer(c.customerId);
+      const company = await getCompanySettings();
+      const sPhone = c.senderPhone || company.companyPhone || '';
+      const sAddr = c.senderAddress || company.companyAddress || '';
+      const rPhone = c.receiverPhone || cust?.phone || '';
+      const rAddr = c.receiverAddress || cust?.address || '';
+
       document.getElementById('challanModalTitle').textContent = `Challan ${c.id}`;
       document.getElementById('challanModalBody').innerHTML = `
-      <p><strong>Customer:</strong> ${customerName(c.customerId)}</p>
-      <p><strong>Date:</strong> ${new Date(c.challanDate).toLocaleString()}</p>
-      <p><strong>Sale:</strong> ${c.saleId || 'Standalone'}</p>
-      <p><strong>Stock deducted:</strong> ${c.deductStock}</p>
-      <table class="table table-sm"><thead><tr><th>Product</th><th>Qty</th></tr></thead>
-      <tbody>${(c.items || []).map((i) => `<tr><td>${i.productName}</td><td>${i.quantity}</td></tr>`).join('')}</tbody></table>`;
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="p-2 border rounded bg-light-subtle small">
+              <strong class="text-primary d-block mb-1">Sender Details</strong>
+              <div><strong>Name:</strong> ${escapeHtml(company.companyName || 'Inventory ERP')}</div>
+              ${sPhone ? `<div><strong>Phone:</strong> ${escapeHtml(sPhone)}</div>` : ''}
+              ${sAddr ? `<div><strong>Address:</strong> ${escapeHtml(sAddr)}</div>` : ''}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-2 border rounded bg-light-subtle small">
+              <strong class="text-primary d-block mb-1">Receiver Details</strong>
+              <div><strong>Deliver To:</strong> ${escapeHtml(cust?.name || customerName(c.customerId))}</div>
+              ${rPhone ? `<div><strong>Phone:</strong> ${escapeHtml(rPhone)}</div>` : ''}
+              ${rAddr ? `<div><strong>Address:</strong> ${escapeHtml(rAddr)}</div>` : ''}
+            </div>
+          </div>
+        </div>
+        <p class="mb-1"><strong>Date:</strong> ${new Date(c.challanDate).toLocaleString()}</p>
+        <p class="mb-1"><strong>Sale:</strong> ${c.saleId || 'Standalone'}</p>
+        <p class="mb-1"><strong>Status:</strong> ${c.status}</p>
+        <p class="mb-1"><strong>Stock deducted:</strong> ${c.deductStock}</p>
+        ${c.note ? `<p class="mb-1"><strong>Note:</strong> ${escapeHtml(c.note)}</p>` : ''}
+        <table class="table table-sm mt-3"><thead><tr><th>Product</th><th>Qty</th></tr></thead>
+        <tbody>${(c.items || []).map((i) => `<tr><td>${escapeHtml(i.productName)}</td><td>${i.quantity}</td></tr>`).join('')}</tbody></table>`;
       modal.show();
     } catch (err) {
       showError(err);
@@ -185,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentChallan) return;
     try {
       const company = await getCompanySettings();
-      printChallan(currentChallan, customerName(currentChallan.customerId), company);
+      printChallan(currentChallan, getCustomer(currentChallan.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -195,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentChallan) return;
     try {
       const company = await getCompanySettings();
-      await downloadChallanPdf(currentChallan, customerName(currentChallan.customerId), company);
+      await downloadChallanPdf(currentChallan, getCustomer(currentChallan.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -230,6 +287,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       showError(new Error('Add products or link to a sale.'));
       return;
     }
+    const senderPhone = document.getElementById('senderPhone')?.value.trim() || '';
+    const senderAddress = document.getElementById('senderAddress')?.value.trim() || '';
+    const receiverPhone = document.getElementById('receiverPhone')?.value.trim() || '';
+    const receiverAddress = document.getElementById('receiverAddress')?.value.trim() || '';
+
     const payload = {
       customerId,
       saleId: saleId || undefined,
@@ -237,6 +299,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? new Date(document.getElementById('challanDate').value).toISOString()
         : undefined,
       note: document.getElementById('note').value.trim(),
+      senderPhone: senderPhone || undefined,
+      senderAddress: senderAddress || undefined,
+      receiverPhone: receiverPhone || undefined,
+      receiverAddress: receiverAddress || undefined,
       items: items.length ? items : undefined
     };
     try {
@@ -248,6 +314,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       lineItemsBody.innerHTML = '';
       customerSearch.clear();
       saleSearch.clear();
+      document.getElementById('receiverPhone').value = '';
+      document.getElementById('receiverAddress').value = '';
+      getCompanySettings().then((company) => {
+        if (document.getElementById('senderPhone')) {
+          document.getElementById('senderPhone').value = company?.companyPhone || '';
+        }
+        if (document.getElementById('senderAddress')) {
+          document.getElementById('senderAddress').value = company?.companyAddress || '';
+        }
+      });
       addLine();
     } catch (err) {
       showError(err);

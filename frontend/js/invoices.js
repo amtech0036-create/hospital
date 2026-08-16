@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const c = customers.find((x) => x.id === id);
     return c ? c.name : id;
   }
+  function getCustomer(id) {
+    return customers.find((x) => x.id === id) || { name: customerName(id) };
+  }
   function statusBadge(status) {
     return status === 'Completed'
       ? '<span class="badge bg-success">Completed</span>'
@@ -98,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderInvoiceBody(sale, returns = []) {
+    const cust = getCustomer(sale.customerId);
     const returnsHtml = returns.length
       ? `<h6 class="mt-3">Returns</h6><ul class="small">${returns
           .map((r) => `<li>${r.id} — ${formatMoney(r.total)} on ${new Date(r.returnDate).toLocaleDateString()}</li>`)
@@ -106,11 +110,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     return `
       <div id="invoicePrintArea">
-        <p><strong>Status:</strong> ${sale.status}</p>
-        <p><strong>Customer:</strong> ${customerName(sale.customerId)}</p>
-        <p><strong>Date:</strong> ${new Date(sale.saleDate).toLocaleString()}</p>
-        <p><strong>Payment:</strong> ${sale.paymentMethod} — Paid ${formatMoney(sale.amountPaid)} of ${formatMoney(sale.total)}</p>
-        ${sale.note ? `<p><strong>Note:</strong> ${sale.note}</p>` : ''}
+        <p class="mb-1"><strong>Status:</strong> ${sale.status}</p>
+        <p class="mb-1"><strong>Customer (Bill To):</strong> ${escapeHtml(cust?.name || customerName(sale.customerId))}</p>
+        ${cust?.address ? `<p class="mb-1"><strong>Address:</strong> ${escapeHtml(cust.address)}</p>` : ''}
+        ${cust?.phone ? `<p class="mb-1"><strong>Phone:</strong> ${escapeHtml(cust.phone)}</p>` : ''}
+        <p class="mb-1"><strong>Paid:</strong> ${formatMoney(sale.amountPaid)} of ${formatMoney(sale.total)}</p>
+        <p class="mb-1"><strong>Date:</strong> ${new Date(sale.saleDate).toLocaleString()}</p>
+        <p class="mb-1"><strong>Payment:</strong> ${escapeHtml(sale.paymentMethod)}</p>
+        ${sale.note ? `<p class="mb-1"><strong>Note:</strong> ${escapeHtml(sale.note)}</p>` : ''}
         <table class="table table-sm mt-3">
           <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
           <tbody>
@@ -118,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               .map(
                 (i) => `
               <tr>
-                <td>${i.productName}</td>
+                <td>${escapeHtml(i.productName)}</td>
                 <td>${i.quantity}</td>
                 <td>${formatMoney(i.unitPrice)}</td>
                 <td>${formatMoney(i.lineTotal)}</td>
@@ -221,11 +228,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   async function quickPrint(id) {
     try {
       const sale = await fetchSale(id);
       const company = await getCompanySettings();
-      printInvoice(sale, customerName(sale.customerId), company);
+      printInvoice(sale, getCustomer(sale.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -235,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const sale = await fetchSale(id);
       const company = await getCompanySettings();
-      await downloadInvoicePdf(sale, customerName(sale.customerId), company);
+      await downloadInvoicePdf(sale, getCustomer(sale.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -245,7 +260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentSale) return;
     try {
       const company = await getCompanySettings();
-      printInvoice(currentSale, customerName(currentSale.customerId), company);
+      printInvoice(currentSale, getCustomer(currentSale.customerId), company);
     } catch (err) {
       showError(err);
     }
@@ -255,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentSale) return;
     try {
       const company = await getCompanySettings();
-      await downloadInvoicePdf(currentSale, customerName(currentSale.customerId), company);
+      await downloadInvoicePdf(currentSale, getCustomer(currentSale.customerId), company);
     } catch (err) {
       showError(err);
     }

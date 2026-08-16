@@ -32,7 +32,18 @@ class ChallanService {
   }
 
   async create(input, { createdBy } = {}) {
-    const { customerId, saleId = '', challanDate, note = '', items, deductStock } = input;
+    const {
+      customerId,
+      saleId = '',
+      challanDate,
+      note = '',
+      items,
+      deductStock,
+      senderPhone = '',
+      senderAddress = '',
+      receiverPhone = '',
+      receiverAddress = ''
+    } = input;
 
     await CustomerService.getById(customerId);
 
@@ -127,6 +138,10 @@ class ChallanService {
       status: 'Dispatched',
       note,
       deductStock: shouldDeductStock ? 'Yes' : 'No',
+      senderPhone,
+      senderAddress,
+      receiverPhone,
+      receiverAddress,
       createdBy: createdBy || 'unknown'
     });
 
