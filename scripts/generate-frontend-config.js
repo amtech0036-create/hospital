@@ -15,7 +15,15 @@ const content = `/**
  * API backend: ${apiUrl}
  */
 window.ERP_CONFIG = {
-  API_BASE_URL: '${apiUrl.replace(/'/g, "\\'")}'
+  API_BASE_URL: '${apiUrl.replace(/'/g, "\\'")}',
+  COMPANY: {
+    name: 'AM Tech Solutions BD',
+    logo: 'assets/amtechlogo.png',
+    address: 'Baraipara Bazar Ashulia Savar Dhaka',
+    phone: '+880 1736002401',
+    website: 'https://amtechsolutionsbd.vercel.app/',
+    websiteDisplay: 'www.amtechsolutionsbd.com'
+  }
 };
 `;
 

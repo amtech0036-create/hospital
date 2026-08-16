@@ -13,10 +13,11 @@ const SETTING_KEYS = [
 ];
 
 const DEFAULTS = {
-  companyName: 'Inventory ERP',
-  companyPhone: '',
+  companyName: 'AM Tech Solutions BD',
+  companyPhone: '+880 1736002401',
   companyEmail: '',
-  companyAddress: '',
+  companyAddress: 'Baraipara Bazar Ashulia Savar Dhaka',
+  companyWebsite: 'https://amtechsolutionsbd.vercel.app/',
   currencySymbol: '৳',
   invoiceFooterNote: 'Thank you for your business.'
 };
