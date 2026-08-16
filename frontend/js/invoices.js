@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td>${formatMoney(s.amountPaid)}</td>
         <td>${statusBadge(s.status)}</td>
         <td class="text-end">
+          <button class="btn btn-sm btn-outline-dark" data-pos="${s.id}">POS</button>
           <button class="btn btn-sm btn-outline-secondary" data-print="${s.id}">Print</button>
           <button class="btn btn-sm btn-outline-primary" data-pdf="${s.id}">PDF</button>
           <button class="btn btn-sm btn-outline-primary" data-view="${s.id}">View</button>
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .join('');
 
     body.querySelectorAll('[data-view]').forEach((btn) => btn.addEventListener('click', () => viewInvoice(btn.dataset.view)));
+    body.querySelectorAll('[data-pos]').forEach((btn) => btn.addEventListener('click', () => quickPosPrint(btn.dataset.pos)));
     body.querySelectorAll('[data-print]').forEach((btn) => btn.addEventListener('click', () => quickPrint(btn.dataset.print)));
     body.querySelectorAll('[data-pdf]').forEach((btn) => btn.addEventListener('click', () => quickPdf(btn.dataset.pdf)));
   }
@@ -236,6 +238,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/"/g, '&quot;');
   }
 
+  async function quickPosPrint(id) {
+    try {
+      const sale = await fetchSale(id);
+      const company = await getCompanySettings();
+      printPosReceipt(sale, getCustomer(sale.customerId), company);
+    } catch (err) {
+      showError(err);
+    }
+  }
+
   async function quickPrint(id) {
     try {
       const sale = await fetchSale(id);
@@ -255,6 +267,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       showError(err);
     }
   }
+
+  document.getElementById('invoicePosPrintBtn')?.addEventListener('click', async () => {
+    if (!currentSale) return;
+    try {
+      const company = await getCompanySettings();
+      printPosReceipt(currentSale, getCustomer(currentSale.customerId), company);
+    } catch (err) {
+      showError(err);
+    }
+  });
 
   document.getElementById('invoicePrintBtn').addEventListener('click', async () => {
     if (!currentSale) return;
