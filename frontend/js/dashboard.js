@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderStatCards(res.data);
     renderLowStock(res.data.lowStockProducts);
     renderRecentPayments(res.data.recentPayments);
+    renderCustomersWithNoPayments(res.data.customersWithNoPaymentsIn30Days);
   } catch (err) {
     alertBox.textContent = err.message || 'Failed to load dashboard.';
     alertBox.classList.remove('d-none');
@@ -99,6 +100,58 @@ function renderRecentPayments(payments) {
           .join('')}
       </tbody>
     </table>`;
+}
+
+function renderCustomersWithNoPayments(items) {
+  const container = document.getElementById('noPaymentsList');
+  if (!container) return;
+
+  if (!items || !items.length) {
+    container.innerHTML = '<p class="text-muted small mb-0">All customers have made payments within the last 30 days.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Customer Name</th>
+            <th>Last Payment Date</th>
+            <th>Days Without Payment</th>
+            <th>Outstanding Balance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items
+            .map((c) => {
+              const lastPaymentText = c.lastPaymentDate
+                ? new Date(c.lastPaymentDate).toLocaleDateString()
+                : '<span class="text-muted fst-italic">No payment history</span>';
+              
+              const daysText = c.daysSinceLastPayment !== null
+                ? `${c.daysSinceLastPayment} days`
+                : '<span class="text-muted">N/A</span>';
+              
+              const badge = c.daysSinceLastPayment !== null
+                ? `<span class="badge bg-danger">Overdue (${c.daysSinceLastPayment}d)</span>`
+                : `<span class="badge bg-warning text-dark">No Payment</span>`;
+
+              return `
+                <tr>
+                  <td class="fw-medium">${c.name}</td>
+                  <td>${lastPaymentText}</td>
+                  <td>${daysText}</td>
+                  <td class="fw-bold">${formatMoney(c.outstandingBalance)}</td>
+                  <td>${badge}</td>
+                </tr>
+              `;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 function formatNumber(n) {

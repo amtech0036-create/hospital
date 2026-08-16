@@ -41,12 +41,13 @@ class DashboardService {
     const customerDue = customers.reduce((total, c) => total + Math.max(0, customerBalances[c.id] || 0), 0);
     const supplierDue = suppliers.reduce((total, s) => total + Math.max(0, supplierBalances[s.id] || 0), 0);
 
-    const [recentPayments, todaysSales, todaysPurchases, grossProfit, recentSales] = await Promise.all([
+    const [recentPayments, todaysSales, todaysPurchases, grossProfit, recentSales, customersWithNoPaymentsIn30Days] = await Promise.all([
       this._recentPayments(customers, suppliers),
       SaleService.sumForDate(),
       this._todaysPurchases(),
       SaleService.grossProfitForDate(),
-      this._recentSales(sales, customers)
+      this._recentSales(sales, customers),
+      this._customersWithNoPaymentsIn30Days(customers, customerBalances)
     ]);
 
     return {
@@ -64,8 +65,62 @@ class DashboardService {
       totalEmployees: employees.length,
       lowStockProducts,
       recentSales,
-      recentPayments
+      recentPayments,
+      customersWithNoPaymentsIn30Days
     };
+  }
+
+  async _customersWithNoPaymentsIn30Days(customers, customerBalances) {
+    const customerTxns = await customerTransactionRepository.findAll();
+    const paymentTxns = customerTxns.filter((t) => t.type === 'Payment Received');
+
+    const latestPaymentByCustomer = {};
+    for (const t of paymentTxns) {
+      const cId = t.customerId;
+      const tDate = new Date(t.transactionDate);
+      if (!isNaN(tDate.getTime())) {
+        if (!latestPaymentByCustomer[cId] || tDate > latestPaymentByCustomer[cId]) {
+          latestPaymentByCustomer[cId] = tDate;
+        }
+      }
+    }
+
+    const now = new Date();
+    const results = [];
+
+    for (const c of customers) {
+      const lastDate = latestPaymentByCustomer[c.id];
+      if (!lastDate) {
+        results.push({
+          id: c.id,
+          name: c.name,
+          lastPaymentDate: null,
+          daysSinceLastPayment: null,
+          outstandingBalance: customerBalances[c.id] || 0
+        });
+      } else {
+        const diffMs = now.getTime() - lastDate.getTime();
+        const daysSince = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (daysSince > 30) {
+          results.push({
+            id: c.id,
+            name: c.name,
+            lastPaymentDate: lastDate.toISOString(),
+            daysSinceLastPayment: daysSince,
+            outstandingBalance: customerBalances[c.id] || 0
+          });
+        }
+      }
+    }
+
+    results.sort((a, b) => {
+      if (a.daysSinceLastPayment === null && b.daysSinceLastPayment === null) return 0;
+      if (a.daysSinceLastPayment === null) return -1;
+      if (b.daysSinceLastPayment === null) return 1;
+      return b.daysSinceLastPayment - a.daysSinceLastPayment;
+    });
+
+    return results;
   }
 
   async _todaysPurchases() {
