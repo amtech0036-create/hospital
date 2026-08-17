@@ -38,11 +38,50 @@ const SIDEBAR_SECTIONS = [
   { title: 'Settings', links: [{ label: 'Settings', href: '/settings.html' }] }
 ];
 
+function getPermittedSections() {
+  const user = getCurrentUser();
+  const role = (user && user.role ? user.role : '').trim();
+  const lowerRole = role.toLowerCase();
+
+  // Admin & Manager have access to all sections
+  if (lowerRole === 'admin' || lowerRole === 'manager') {
+    return SIDEBAR_SECTIONS;
+  }
+
+  return SIDEBAR_SECTIONS.map((section) => {
+    if (lowerRole === 'demo') {
+      // Demo: Dashboard, Inventory (Products, Categories, Brands, Stock), Reports
+      if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan', 'Sales', 'Customers'].includes(section.title)) {
+        return null;
+      }
+    } else if (lowerRole === 'sales' || lowerRole === 'sales user') {
+      // Sales: Dashboard, Sales, Customers, Inventory
+      if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan'].includes(section.title)) {
+        return null;
+      }
+    } else if (lowerRole === 'hr') {
+      // HR: Dashboard, HR & Payroll, Reports
+      if (section.title && ['Accounts', 'Purchases', 'Suppliers', 'Sales', 'Challan', 'Settings', 'Customers'].includes(section.title)) {
+        return null;
+      }
+    } else if (lowerRole === 'accountant') {
+      // Accountant: Dashboard, Accounts, Sales, Purchases, Reports, Customers, Suppliers
+      if (section.title && ['HR & Payroll', 'Settings'].includes(section.title)) {
+        return null;
+      }
+    }
+
+    return section;
+  }).filter(Boolean);
+}
+
 function renderSidebar(activeHref) {
   const container = document.getElementById('erpSidebar');
   if (!container) return;
 
-  const sectionsHtml = SIDEBAR_SECTIONS.map((section) => {
+  const permittedSections = getPermittedSections();
+
+  const sectionsHtml = permittedSections.map((section) => {
     const linksHtml = section.links
       .map((link) => {
         const isActive = link.href === activeHref;
@@ -135,6 +174,7 @@ function renderTopbar() {
   if (!container) return;
 
   const user = getCurrentUser();
+  const isDemo = user && (user.role || '').toLowerCase() === 'demo';
 
   container.innerHTML = `
     <div class="erp-topbar">
@@ -148,6 +188,7 @@ function renderTopbar() {
             </svg>
           </button>
           <h5 id="pageTitle"></h5>
+          ${isDemo ? '<span class="badge bg-warning text-dark ms-3"><i class="bi bi-eye-fill me-1"></i> Demo Mode (Read Only)</span>' : ''}
         </div>
         <div class="erp-topbar-right">
           <span class="erp-user-badge">${user ? user.name + ' · ' + user.role : ''}</span>

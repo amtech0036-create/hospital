@@ -7,7 +7,7 @@ const authorize = require('../middleware/role.middleware');
 const validate = require('../middleware/validate.middleware');
 const { employeeCreateRules, employeeUpdateRules } = require('../validators/employee.validator');
 
-router.use(authenticate);
+router.use(authenticate, authorize('Admin', 'Manager', 'HR'));
 
 router.get('/', controller.list);
 router.get('/:id', controller.getOne);

@@ -5,7 +5,7 @@ const controller = require('../controllers/payroll.controller');
 const authenticate = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
 
-router.use(authenticate);
+router.use(authenticate, authorize('Admin', 'Manager', 'HR', 'Accountant'));
 
 router.get('/', controller.list);
 router.get('/dashboard-stats', controller.dashboardStats);

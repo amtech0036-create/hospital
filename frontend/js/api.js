@@ -102,8 +102,76 @@ async function downloadBackupFile(format = 'zip') {
   URL.revokeObjectURL(url);
 }
 
-function requireAuthOrRedirect() {
-  if (!getToken()) {
-    window.location.href = '/login.html';
+function isDemoUser() {
+  const user = getCurrentUser();
+  return Boolean(user && (user.role || '').trim().toLowerCase() === 'demo');
+}
+
+function hasWritePermission() {
+  return !isDemoUser();
+}
+
+function applyUiPermissions() {
+  if (isDemoUser()) {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('demo-mode');
+      const styleEl = document.createElement('style');
+      styleEl.innerHTML = `
+        body.demo-mode .btn-primary:not(#logoutBtn),
+        body.demo-mode .btn-success,
+        body.demo-mode .btn-danger,
+        body.demo-mode [data-require-write],
+        body.demo-mode .demo-hide {
+          display: none !important;
+        }
+        body.demo-mode input, body.demo-mode select, body.demo-mode textarea {
+          pointer-events: auto;
+        }
+      `;
+      document.head.appendChild(styleEl);
+    });
   }
+}
+
+function requireAuthOrRedirect() {
+  const user = getCurrentUser();
+  if (!getToken() || !user) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  const role = (user.role || '').trim().toLowerCase();
+  const path = window.location.pathname.toLowerCase();
+
+  // Route-level permission checks
+  const restrictedForDemoAndSales = [
+    'settings.html',
+    'employees.html',
+    'payroll.html',
+    'expenses.html',
+    'payments.html',
+    'purchases.html',
+    'suppliers.html',
+    'challans.html'
+  ];
+
+  if (role === 'demo') {
+    if (restrictedForDemoAndSales.some((p) => path.includes(p))) {
+      window.location.href = '/dashboard.html';
+      return;
+    }
+  } else if (role === 'sales' || role === 'sales user') {
+    if (restrictedForDemoAndSales.some((p) => path.includes(p))) {
+      window.location.href = '/dashboard.html';
+      return;
+    }
+  } else if (role === 'hr') {
+    const restrictedForHR = ['settings.html', 'expenses.html', 'payments.html', 'purchases.html', 'suppliers.html', 'challans.html', 'sales.html', 'invoices.html'];
+    if (restrictedForHR.some((p) => path.includes(p))) {
+      window.location.href = '/dashboard.html';
+      return;
+    }
+  }
+
+  applyUiPermissions();
 }
