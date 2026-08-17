@@ -11,7 +11,8 @@ class EmployeeService {
           e.name.toLowerCase().includes(q) ||
           (e.phone || '').includes(q) ||
           (e.email || '').toLowerCase().includes(q) ||
-          (e.designation || '').toLowerCase().includes(q)
+          (e.designation || '').toLowerCase().includes(q) ||
+          (e.departmentName || '').toLowerCase().includes(q)
       );
     }
 
@@ -59,10 +60,14 @@ class EmployeeService {
     for (const key of allowed) {
       if (input[key] !== undefined) payload[key] = input[key];
     }
-    if (payload.departmentId && !payload.departmentName) {
-      const { departmentRepository } = require('../repositories');
-      const dept = await departmentRepository.findById(payload.departmentId);
-      if (dept) payload.departmentName = dept.name;
+    if (payload.departmentId !== undefined) {
+      if (payload.departmentId && !payload.departmentName) {
+        const { departmentRepository } = require('../repositories');
+        const dept = await departmentRepository.findById(payload.departmentId);
+        if (dept) payload.departmentName = dept.name;
+      } else if (!payload.departmentId && !payload.departmentName) {
+        payload.departmentName = '';
+      }
     }
     return employeeRepository.update(id, payload);
   }

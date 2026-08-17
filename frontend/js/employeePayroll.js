@@ -37,6 +37,29 @@ function initPayroll({ showError, showSuccess, getEmployees }) {
     if (label) label.textContent = formatMoney(net);
   }
 
+  async function fetchAndCalcAbsentDeduction(employeeId) {
+    if (!employeeId) return;
+    const payMonth = document.getElementById('payrollPayMonth')?.value;
+    try {
+      const attRes = await apiRequest('/attendance');
+      const records = attRes.data || [];
+      const empAtt = records.filter((a) => a.employeeId === employeeId && (!payMonth || (a.date && a.date.startsWith(payMonth))));
+      const absentCount = empAtt.filter((a) => a.status === 'Absent' || a.attendanceStatus === 'Absent').length;
+
+      const baseSalary = parseFloat(document.getElementById('payrollBaseSalary')?.value) || 0;
+      const perDaySalary = baseSalary > 0 ? baseSalary / 30 : 0;
+      const absentDeduction = Math.max(0, Math.round(perDaySalary * absentCount * 100) / 100);
+
+      const deductionsEl = document.getElementById('payrollDeductions');
+      if (deductionsEl && absentDeduction > 0) {
+        deductionsEl.value = absentDeduction;
+      }
+      recalcNetPay();
+    } catch (err) {
+      console.warn('Failed to fetch attendance absent count in employeePayroll', err);
+    }
+  }
+
   function updatePayrollEmployeeSearch(employees) {
     const active = (employees || []).filter((e) => e.status === 'Active');
     const mount = document.getElementById('payrollEmployeeSearchMount');
@@ -50,9 +73,10 @@ function initPayroll({ showError, showSuccess, getEmployees }) {
         getLabel: (e) => e.name,
         getValue: (e) => e.id,
         getSubLabel: (e) => [e.designation, e.phone].filter(Boolean).join(' · '),
-        onSelect: (e) => {
+        onSelect: async (e) => {
           const baseSalaryEl = document.getElementById('payrollBaseSalary');
           if (baseSalaryEl) baseSalaryEl.value = e.salary || 0;
+          await fetchAndCalcAbsentDeduction(e.id);
           recalcNetPay();
         }
       });
@@ -231,6 +255,7 @@ function initPayroll({ showError, showSuccess, getEmployees }) {
       if (item) {
         const baseSalaryEl = document.getElementById('payrollBaseSalary');
         if (baseSalaryEl) baseSalaryEl.value = item.salary || 0;
+        fetchAndCalcAbsentDeduction(item.id);
         recalcNetPay();
       }
     }

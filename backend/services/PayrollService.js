@@ -163,6 +163,23 @@ class PayrollService {
       input.advanceDeduction = await AdvanceService.getDeductionForPayroll(employeeId);
     }
 
+    // Auto-calculate absent deduction from attendance if not provided
+    if (input.absentDeduction === undefined) {
+      try {
+        const attendanceLogs = await attendanceRepository.findAll();
+        const empAtt = attendanceLogs.filter((a) => a.employeeId === employeeId && a.date && a.date.startsWith(payMonth));
+        const absentCount = empAtt.filter((a) => a.status === 'Absent' || a.attendanceStatus === 'Absent').length;
+        if (absentCount > 0) {
+          const basicSalary = roundMoney(input.basicSalary !== undefined ? input.basicSalary : (input.baseSalary || employee.salary || 0));
+          const workingDays = Number(input.workingDays || input.otWorkingDays) || 30;
+          const perDaySalary = basicSalary / (workingDays > 0 ? workingDays : 30);
+          input.absentDeduction = roundMoney(absentCount * perDaySalary);
+        }
+      } catch (err) {
+        logger.warn('Failed to auto-calculate absent deduction in backend', err);
+      }
+    }
+
     const calc = this.calculateTotals(input, employee.salary);
 
     const record = await salaryRepository.create({

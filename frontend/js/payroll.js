@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           } catch (err) {
             document.getElementById('advanceDeduction').value = 0;
           }
-          await fetchAndCalcAttendanceOT(e.id);
+          await fetchAndCalcAttendanceData(e.id);
           recalcNetPay();
         }
       });
@@ -236,15 +236,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     recalcNetPay();
   }
 
-  async function fetchAndCalcAttendanceOT(employeeId) {
+  let currentAbsentCount = 0;
+
+  function calcAbsentDeduction() {
+    const basic = parseFloat(document.getElementById('basicSalary')?.value) || 0;
+    const workingDays = parseFloat(document.getElementById('otWorkingDays')?.value) || 30;
+    const effectiveDays = workingDays > 0 ? workingDays : 30;
+    const perDaySalary = basic > 0 ? (basic / effectiveDays) : 0;
+    const absentDeduction = Math.max(0, Math.round(perDaySalary * currentAbsentCount * 100) / 100);
+
+    const absentEl = document.getElementById('absentDeduction');
+    if (absentEl) {
+      absentEl.value = absentDeduction;
+    }
+
+    const infoEl = document.getElementById('absentDeductionInfo');
+    if (infoEl) {
+      if (currentAbsentCount > 0) {
+        infoEl.textContent = `Auto-synced: ${currentAbsentCount} Absent day(s) (Formula: ৳${basic.toFixed(2)} ÷ ${effectiveDays} days = ৳${perDaySalary.toFixed(2)}/day × ${currentAbsentCount} = ৳${absentDeduction.toFixed(2)})`;
+      } else {
+        infoEl.textContent = `Auto-synced: 0 Absent days found in Attendance`;
+      }
+    }
+  }
+
+  async function fetchAndCalcAttendanceData(employeeId) {
     if (!employeeId) return;
     const payMonth = document.getElementById('payrollPayMonth')?.value;
     try {
       const attRes = await apiRequest('/attendance');
       const records = attRes.data || [];
       const empAtt = records.filter(a => a.employeeId === employeeId && (!payMonth || (a.date && a.date.startsWith(payMonth))));
+      
+      // 1. Calculate OT Hours
       const totalOtHrs = empAtt.reduce((sum, a) => sum + (Number(a.overtimeHours) || 0), 0);
-
       const otInput = document.getElementById('overtimeHoursInput');
       if (otInput) {
         otInput.value = totalOtHrs;
@@ -254,8 +279,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         infoEl.textContent = `Auto-synced: ${totalOtHrs} OT Hrs from Attendance (${payMonth || 'all logs'})`;
       }
       calcOvertimePay();
+
+      // 2. Calculate Absent Days & Deduction
+      const absentLogs = empAtt.filter(a => a.status === 'Absent' || a.attendanceStatus === 'Absent');
+      currentAbsentCount = absentLogs.length;
+      calcAbsentDeduction();
     } catch (err) {
-      console.warn('Failed to fetch attendance for OT calculation', err);
+      console.warn('Failed to fetch attendance data for calculation', err);
     }
   }
 
@@ -298,12 +328,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   ['overtimeHoursInput', 'basicSalary', 'otWorkingDays', 'otDailyHours'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('input', calcOvertimePay);
+    document.getElementById(id)?.addEventListener('input', () => {
+      calcOvertimePay();
+      calcAbsentDeduction();
+    });
   });
   document.getElementById('payrollPayMonth')?.addEventListener('change', () => {
     const employeeId = processEmployeeSearch?.getValue();
     if (employeeId) {
-      fetchAndCalcAttendanceOT(employeeId);
+      fetchAndCalcAttendanceData(employeeId);
     }
   });
 

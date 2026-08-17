@@ -11,7 +11,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('employeeForm');
   let editingId = null;
   let allEmployees = [];
+  let departments = [];
   let payrollApi = null;
+
+  async function loadDepartments() {
+    try {
+      const res = await apiRequest('/departments');
+      departments = res.data || [];
+      const deptSelect = document.getElementById('e_departmentId');
+      if (deptSelect) {
+        deptSelect.innerHTML =
+          '<option value="">Select Department</option>' +
+          departments.map((d) => `<option value="${d.id}">${d.name}</option>`).join('');
+      }
+    } catch (err) {
+      console.warn('Could not load departments', err);
+    }
+  }
 
   function showError(err) {
     successBox.classList.add('d-none');
@@ -79,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderTable(employees) {
     const body = document.getElementById('employeeTableBody');
     if (!employees.length) {
-      body.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No employees yet.</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No employees yet.</td></tr>';
       return;
     }
     body.innerHTML = employees
@@ -88,6 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <tr>
         <td>${e.name}</td>
         <td>${e.phone || ''}</td>
+        <td>${e.departmentName || ''}</td>
         <td>${e.designation || ''}</td>
         <td>${formatDate(e.joinDate)}</td>
         <td>${formatMoney(e.salary)}</td>
@@ -124,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.reset();
     document.getElementById('e_salary').value = '0';
     document.getElementById('e_joinDate').value = toDateInputValue(new Date().toISOString());
+    const deptEl = document.getElementById('e_departmentId'); if (deptEl) deptEl.value = '';
     const fpEl = document.getElementById('e_fingerprintId'); if (fpEl) fpEl.value = '';
     const rfidEl = document.getElementById('e_rfidCardNumber'); if (rfidEl) rfidEl.value = '';
     const devUserEl = document.getElementById('e_deviceUserId'); if (devUserEl) devUserEl.value = '';
@@ -141,6 +159,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('e_phone').value = e.phone || '';
     document.getElementById('e_email').value = e.email || '';
     document.getElementById('e_address').value = e.address || '';
+    
+    const deptEl = document.getElementById('e_departmentId');
+    if (deptEl) {
+      let deptId = e.departmentId || '';
+      if (!deptId && e.departmentName) {
+        const found = departments.find((d) => d.name === e.departmentName);
+        if (found) deptId = found.id;
+      }
+      deptEl.value = deptId;
+    }
+
     document.getElementById('e_designation').value = e.designation || '';
     document.getElementById('e_joinDate').value = toDateInputValue(e.joinDate);
     document.getElementById('e_salary').value = e.salary || 0;
@@ -186,11 +215,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearError();
 
     const joinDateRaw = document.getElementById('e_joinDate').value;
+    const deptEl = document.getElementById('e_departmentId');
+    const selectedDeptId = deptEl ? deptEl.value : '';
+    const selectedDeptObj = departments.find((d) => d.id === selectedDeptId);
+
     const payload = {
       name: document.getElementById('e_name').value.trim(),
       phone: document.getElementById('e_phone').value.trim(),
       email: document.getElementById('e_email').value.trim(),
       address: document.getElementById('e_address').value.trim(),
+      departmentId: selectedDeptId,
+      departmentName: selectedDeptObj ? selectedDeptObj.name : '',
       designation: document.getElementById('e_designation').value.trim(),
       joinDate: joinDateRaw ? new Date(joinDateRaw + 'T00:00:00').toISOString() : undefined,
       salary: parseFloat(document.getElementById('e_salary').value) || 0,
@@ -239,5 +274,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchTimer = setTimeout(() => loadEmployees(e.target.value.trim()), 300);
   });
 
+  await loadDepartments();
   await loadEmployees();
 });
