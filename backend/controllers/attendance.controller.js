@@ -22,4 +22,9 @@ const remove = asyncHandler(async (req, res) => {
   return success(res, { message: 'Attendance deleted.' });
 });
 
-module.exports = { list, getOne, record, remove };
+const autoProcessAbsences = asyncHandler(async (req, res) => {
+  const result = await AttendanceService.autoProcessAbsences(req.body ? req.body.date : undefined);
+  return success(res, { message: 'Absences auto-processed.', data: result });
+});
+
+module.exports = { list, getOne, record, remove, autoProcessAbsences };

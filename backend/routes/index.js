@@ -23,6 +23,9 @@ router.use('/attendance', require('./attendance.routes'));
 router.use('/leaves', require('./leave.routes'));
 router.use('/advances', require('./advance.routes'));
 router.use('/payroll', require('./payroll.routes'));
+router.use('/devices', require('./device.routes'));
+router.use('/shifts', require('./shift.routes'));
+router.use('/biometrics', require('./biometric.routes'));
 router.use('/settings', require('./settings.routes'));
 router.use('/reports', require('./report.routes'));
 

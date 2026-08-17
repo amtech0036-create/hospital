@@ -72,6 +72,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return new Date().toISOString().slice(0, 10);
   }
 
+  const devicesApi = typeof initBiometricDevices === 'function' ? initBiometricDevices({ showError, showSuccess }) : null;
+  const shiftsApi = typeof initShiftManagement === 'function' ? initShiftManagement({ showError, showSuccess }) : null;
+
   // ---- Navigation Tabs ----
   document.querySelectorAll('.nav-link[data-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -80,6 +83,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.classList.add('active');
       const target = document.getElementById(btn.dataset.tab);
       if (target) target.classList.remove('d-none');
+
+      if (btn.dataset.tab === 'devicesTab' && devicesApi) {
+        devicesApi.loadDevices();
+      }
+      if (btn.dataset.tab === 'shiftsTab' && shiftsApi) {
+        shiftsApi.loadShifts();
+      }
     });
   });
 
@@ -88,13 +98,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const res = await apiRequest('/payroll/dashboard-stats');
       const d = res.data;
-      document.getElementById('statTotalEmployees').textContent = d.totalEmployees || 0;
-      document.getElementById('statPaidThisMonth').textContent = d.paidThisMonth || 0;
-      document.getElementById('statPendingSalaries').textContent = d.pendingSalaries || 0;
-      document.getElementById('statPayrollExpenses').textContent = formatMoney(d.totalPayrollExpenses);
-      document.getElementById('statOvertimeExpenses').textContent = formatMoney(d.totalOvertimeExpenses);
-      document.getElementById('statTotalDeductions').textContent = formatMoney(d.totalDeductions);
-      document.getElementById('statEmployeesOnLeave').textContent = d.employeesOnLeave || 0;
+      const el = (id) => document.getElementById(id);
+      if (el('statTotalEmployees')) el('statTotalEmployees').textContent = d.totalEmployees || 0;
+      if (el('statPresentToday')) el('statPresentToday').textContent = d.employeesPresentToday || 0;
+      if (el('statAbsentToday')) el('statAbsentToday').textContent = d.employeesAbsentToday || 0;
+      if (el('statLateToday')) el('statLateToday').textContent = d.employeesLateToday || 0;
+      if (el('statOTHoursToday')) el('statOTHoursToday').textContent = `${d.totalOvertimeHoursToday || 0} hrs`;
+      if (el('statDevicesStatus')) el('statDevicesStatus').textContent = `${d.devicesOnline || 0} Online / ${d.devicesOffline || 0} Offline`;
+      if (el('statLastSyncTime')) el('statLastSyncTime').textContent = d.lastSyncTime ? new Date(d.lastSyncTime).toLocaleTimeString() : 'Never';
     } catch (err) {
       console.error('Failed to load dashboard stats', err);
     }
@@ -1166,6 +1177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAttendance();
     await loadAdvances();
     await loadLeaves();
+    if (devicesApi) await devicesApi.loadDevices();
+    if (shiftsApi) await shiftsApi.loadShifts();
   } catch (err) {
     showError(err);
   }

@@ -124,11 +124,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.reset();
     document.getElementById('e_salary').value = '0';
     document.getElementById('e_joinDate').value = toDateInputValue(new Date().toISOString());
+    const fpEl = document.getElementById('e_fingerprintId'); if (fpEl) fpEl.value = '';
+    const rfidEl = document.getElementById('e_rfidCardNumber'); if (rfidEl) rfidEl.value = '';
+    const devUserEl = document.getElementById('e_deviceUserId'); if (devUserEl) devUserEl.value = '';
+    const shiftEl = document.getElementById('e_shiftId'); if (shiftEl) shiftEl.value = '';
     document.getElementById('employeeModalTitle').textContent = 'Add Employee';
     modal.show();
   });
 
-  function openEdit(id) {
+  async function openEdit(id) {
     const e = allEmployees.find((x) => x.id === id);
     if (!e) return;
     editingId = id;
@@ -141,6 +145,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('e_joinDate').value = toDateInputValue(e.joinDate);
     document.getElementById('e_salary').value = e.salary || 0;
     document.getElementById('e_note').value = e.note || '';
+
+    // Fetch Biometric Mapping
+    try {
+      const bioRes = await apiRequest(`/biometrics/employee/${id}`);
+      const bio = bioRes.data || {};
+      const fpEl = document.getElementById('e_fingerprintId'); if (fpEl) fpEl.value = bio.fingerprintId || '';
+      const rfidEl = document.getElementById('e_rfidCardNumber'); if (rfidEl) rfidEl.value = bio.rfidCardNumber || '';
+      const devUserEl = document.getElementById('e_deviceUserId'); if (devUserEl) devUserEl.value = bio.deviceUserId || '';
+      const shiftEl = document.getElementById('e_shiftId'); if (shiftEl) shiftEl.value = bio.shiftId || '';
+    } catch (err) {
+      console.warn('Could not fetch biometric profile', err);
+    }
+
     modal.show();
   }
 
@@ -181,11 +198,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
+      let savedEmp;
       if (editingId) {
-        await apiRequest(`/employees/${editingId}`, { method: 'PUT', body: payload });
+        const res = await apiRequest(`/employees/${editingId}`, { method: 'PUT', body: payload });
+        savedEmp = res.data;
       } else {
-        await apiRequest('/employees', { method: 'POST', body: payload });
+        const res = await apiRequest('/employees', { method: 'POST', body: payload });
+        savedEmp = res.data;
       }
+
+      // Save Biometric Profile if fields are present
+      const fpEl = document.getElementById('e_fingerprintId');
+      const rfidEl = document.getElementById('e_rfidCardNumber');
+      const devUserEl = document.getElementById('e_deviceUserId');
+      const shiftEl = document.getElementById('e_shiftId');
+
+      if (savedEmp && savedEmp.id && (fpEl || rfidEl || devUserEl || shiftEl)) {
+        await apiRequest('/biometrics', {
+          method: 'POST',
+          body: {
+            employeeId: savedEmp.id,
+            fingerprintId: fpEl ? fpEl.value.trim() : '',
+            rfidCardNumber: rfidEl ? rfidEl.value.trim() : '',
+            deviceUserId: devUserEl ? devUserEl.value.trim() : '',
+            shiftId: shiftEl ? shiftEl.value : ''
+          }
+        });
+      }
+
       modal.hide();
       loadEmployees();
     } catch (err) {

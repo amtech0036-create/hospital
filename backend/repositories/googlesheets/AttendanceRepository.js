@@ -2,8 +2,8 @@ const BaseSheetRepository = require('./BaseSheetRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'employeeId', 'employeeName', 'date', 'checkIn', 'checkOut',
-  'status', 'workingHours', 'overtimeHours', 'note', 'createdAt', 'updatedAt'
+  'id', 'employeeId', 'employeeName', 'deviceId', 'shiftId', 'date', 'checkIn', 'checkOut',
+  'status', 'attendanceStatus', 'workingHours', 'overtimeHours', 'lateMinutes', 'note', 'createdAt', 'updatedAt'
 ];
 
 class AttendanceRepository extends BaseSheetRepository {

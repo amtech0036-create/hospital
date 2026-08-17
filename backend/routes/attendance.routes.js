@@ -8,6 +8,7 @@ const authorize = require('../middleware/role.middleware');
 router.use(authenticate);
 
 router.get('/', controller.list);
+router.post('/auto-process-absences', authorize('Admin', 'Manager'), controller.autoProcessAbsences);
 router.get('/:id', controller.getOne);
 router.post('/', authorize('Admin', 'Manager', 'Accountant'), controller.record);
 router.delete('/:id', authorize('Admin', 'Manager'), controller.remove);

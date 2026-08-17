@@ -27,7 +27,7 @@
     <div id="payrollAlert" class="alert alert-danger d-none"></div>
     <div id="payrollSuccess" class="alert alert-success d-none"></div>
 
-    <!-- 7 Dashboard KPI Stat Cards -->
+    <!-- Dashboard KPI Stat Cards -->
     <div class="row g-3 mb-3">
       <div class="col-6 col-md-3 col-lg">
         <div class="kpi-card" style="border-left-color: #3182ce;">
@@ -37,38 +37,38 @@
       </div>
       <div class="col-6 col-md-3 col-lg">
         <div class="kpi-card" style="border-left-color: #38a169;">
-          <div class="kpi-label">Paid This Month</div>
-          <div class="kpi-val" id="statPaidThisMonth">0</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3 col-lg">
-        <div class="kpi-card" style="border-left-color: #dd6b20;">
-          <div class="kpi-label">Pending Salary</div>
-          <div class="kpi-val" id="statPendingSalaries">0</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3 col-lg">
-        <div class="kpi-card" style="border-left-color: #805ad5;">
-          <div class="kpi-label">Payroll Expenses</div>
-          <div class="kpi-val" id="statPayrollExpenses">৳0.00</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3 col-lg">
-        <div class="kpi-card" style="border-left-color: #319795;">
-          <div class="kpi-label">Overtime Expenses</div>
-          <div class="kpi-val" id="statOvertimeExpenses">৳0.00</div>
+          <div class="kpi-label">Present Today</div>
+          <div class="kpi-val" id="statPresentToday">0</div>
         </div>
       </div>
       <div class="col-6 col-md-3 col-lg">
         <div class="kpi-card" style="border-left-color: #e53e3e;">
-          <div class="kpi-label">Total Deductions</div>
-          <div class="kpi-val" id="statTotalDeductions">৳0.00</div>
+          <div class="kpi-label">Absent Today</div>
+          <div class="kpi-val" id="statAbsentToday">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg">
+        <div class="kpi-card" style="border-left-color: #dd6b20;">
+          <div class="kpi-label">Late Today</div>
+          <div class="kpi-val" id="statLateToday">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg">
+        <div class="kpi-card" style="border-left-color: #319795;">
+          <div class="kpi-label">OT Hours Today</div>
+          <div class="kpi-val" id="statOTHoursToday">0 hrs</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg">
+        <div class="kpi-card" style="border-left-color: #805ad5;">
+          <div class="kpi-label">Devices Status</div>
+          <div class="kpi-val" id="statDevicesStatus" style="font-size:16px;">0 Online / 0 Offline</div>
         </div>
       </div>
       <div class="col-6 col-md-3 col-lg">
         <div class="kpi-card" style="border-left-color: #d69e2e;">
-          <div class="kpi-label">On Leave</div>
-          <div class="kpi-val" id="statEmployeesOnLeave">0</div>
+          <div class="kpi-label">Last Sync</div>
+          <div class="kpi-val" id="statLastSyncTime" style="font-size:14px;">—</div>
         </div>
       </div>
     </div>
@@ -79,6 +79,8 @@
       <li class="nav-item"><button class="nav-link" data-tab="processTab">➕ Process Salary</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="deptTab">🏢 Departments</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="attTab">📅 Attendance</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="devicesTab">📟 Attendance Devices</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="shiftsTab">⏱️ Shift Management</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="advTab">💰 Salary Advances</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="leaveTab">🏖️ Leave Management</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="reportsTab">📊 Reports</button></li>
@@ -604,6 +606,68 @@
       </div>
     </div>
 
+    <!-- Tab: Attendance Devices -->
+    <div id="devicesTab" class="tab-pane d-none">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h6 class="mb-0">📟 Attendance Devices (ZKTeco / RFID / USB / Face Recognition)</h6>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm" id="syncAllDevicesBtn">🔄 Sync All Devices</button>
+            <button class="btn btn-primary btn-sm" id="addDeviceBtn">+ Register New Device</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Device Name</th>
+                <th>Brand / Type</th>
+                <th>IP : Port</th>
+                <th>Serial Number</th>
+                <th>Location</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Last Sync</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="deviceTableBody">
+              <tr><td colspan="9" class="text-center text-muted py-4">Loading devices...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Shift Management -->
+    <div id="shiftsTab" class="tab-pane d-none">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h6 class="mb-0">⏱️ Shift Management</h6>
+          <button class="btn btn-primary btn-sm" id="addShiftBtn">+ Create Shift</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Shift Name</th>
+                <th>Start - End Time</th>
+                <th>Break Time</th>
+                <th>Standard Hours</th>
+                <th>Grace Period</th>
+                <th>OT Policy</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="shiftTableBody">
+              <tr><td colspan="8" class="text-center text-muted py-4">Loading shifts...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Department Modal -->
@@ -638,6 +702,134 @@
     </div>
   </div>
 
+  <!-- Device Modal -->
+  <div class="modal fade" id="deviceModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="deviceForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deviceModalTitle">Register Attendance Device</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Device Name</label>
+              <input type="text" class="form-control" id="dev_name" required placeholder="e.g. Main Gate ZKTeco" />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Device Type</label>
+                <select class="form-select" id="dev_type">
+                  <option value="ZKTeco Fingerprint Device">ZKTeco Fingerprint Device</option>
+                  <option value="RFID Card Reader">RFID Card Reader</option>
+                  <option value="USB Fingerprint Reader">USB Fingerprint Reader</option>
+                  <option value="Face Recognition Device">Face Recognition Device</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Device Brand</label>
+                <select class="form-select" id="dev_brand">
+                  <option value="ZKTeco">ZKTeco</option>
+                  <option value="Hikvision">Hikvision</option>
+                  <option value="Dahua">Dahua</option>
+                  <option value="Anviz">Anviz</option>
+                  <option value="Generic RFID">Generic RFID</option>
+                  <option value="Generic USB">Generic USB</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-8">
+                <label class="form-label">IP Address</label>
+                <input type="text" class="form-control" id="dev_ip" placeholder="192.168.1.201" />
+              </div>
+              <div class="col-4">
+                <label class="form-label">Port</label>
+                <input type="number" class="form-control" id="dev_port" value="4370" />
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Serial Number</label>
+                <input type="text" class="form-control" id="dev_serial" placeholder="SN-98765432" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">Location</label>
+                <input type="text" class="form-control" id="dev_location" placeholder="Building A Entrance" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Department</label>
+              <select class="form-select" id="dev_department">
+                <option value="">All Departments</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Device</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shift Modal -->
+  <div class="modal fade" id="shiftModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="shiftForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="shiftModalTitle">Create Work Shift</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Shift Name</label>
+              <input type="text" class="form-control" id="shift_name" required placeholder="e.g. Morning Shift" />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Start Time</label>
+                <input type="time" class="form-control" id="shift_startTime" value="08:00" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label">End Time</label>
+                <input type="time" class="form-control" id="shift_endTime" value="17:00" required />
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <label class="form-label">Standard Hours</label>
+                <input type="number" step="0.5" class="form-control" id="shift_standardHours" value="8" />
+              </div>
+              <div class="col-4">
+                <label class="form-label">Grace Period (Mins)</label>
+                <input type="number" class="form-control" id="shift_gracePeriod" value="15" />
+              </div>
+              <div class="col-4">
+                <label class="form-label">Break (Mins)</label>
+                <input type="number" class="form-control" id="shift_breakTime" value="60" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Overtime Policy</label>
+              <select class="form-select" id="shift_otPolicy">
+                <option value="Standard">Standard (Working Hours - Standard Hours)</option>
+                <option value="Fixed">Fixed Overtime</option>
+                <option value="Flexi">Flexi Shift</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Shift</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <script src="js/config.js"></script>
@@ -647,6 +839,8 @@
   <script src="js/dateRangeFilter.js"></script>
   <script src="js/companySettings.js"></script>
   <script src="js/salarySlipDocument.js"></script>
+  <script src="js/biometricDevices.js"></script>
+  <script src="js/shiftManagement.js"></script>
   <script src="js/payroll.js"></script>
 </body>
 </html>

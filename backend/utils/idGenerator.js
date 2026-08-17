@@ -65,7 +65,10 @@ const ID_PREFIXES = {
   DEPARTMENT: 'DEP',
   ATTENDANCE: 'ATT',
   LEAVE: 'LEV',
-  ADVANCE: 'ADV'
+  ADVANCE: 'ADV',
+  DEVICE: 'DEV',
+  SHIFT: 'SHF',
+  BIOMETRIC: 'BIO'
 };
 
 module.exports = { generateId, generateDateBasedId, formatDateForId, extractSequence, ID_PREFIXES };

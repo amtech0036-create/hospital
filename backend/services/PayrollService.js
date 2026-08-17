@@ -1,4 +1,4 @@
-const { salaryRepository, employeeRepository, leaveRepository, attendanceRepository } = require('../repositories');
+const { salaryRepository, employeeRepository, leaveRepository, attendanceRepository, deviceRepository } = require('../repositories');
 const EmployeeService = require('./EmployeeService');
 const AdvanceService = require('./AdvanceService');
 
@@ -259,11 +259,12 @@ class PayrollService {
     const currentMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
     const todayStr = now.toISOString().slice(0, 10);
 
-    const [allEmployees, monthlySalaries, leaves, attendanceToday] = await Promise.all([
+    const [allEmployees, monthlySalaries, leaves, attendanceToday, allDevices] = await Promise.all([
       employeeRepository.findAll({ status: 'Active' }),
       salaryRepository.findAll({ payMonth: currentMonth }),
       leaveRepository.findAll({ status: 'Approved' }),
-      attendanceRepository.findAll({ date: todayStr })
+      attendanceRepository.findAll({ date: todayStr }),
+      deviceRepository.findAll()
     ]);
 
     const paidEmpIds = new Set(monthlySalaries.map((s) => s.employeeId));
@@ -279,6 +280,17 @@ class PayrollService {
       return todayStr >= l.startDate && todayStr <= l.endDate;
     }).length;
 
+    // Biometric Attendance Widget Metrics
+    const presentCount = attendanceToday.filter((a) => a.status === 'Present' || a.attendanceStatus === 'Present').length;
+    const lateCount = attendanceToday.filter((a) => a.status === 'Late' || a.attendanceStatus === 'Late').length;
+    const absentCount = attendanceToday.filter((a) => a.status === 'Absent' || a.attendanceStatus === 'Absent').length;
+    const totalOvertimeHoursToday = attendanceToday.reduce((sum, a) => sum + (Number(a.overtimeHours) || 0), 0);
+
+    const devicesOnline = allDevices.filter((d) => d.status === 'Online').length;
+    const devicesOffline = allDevices.filter((d) => d.status === 'Offline' || d.status === 'Disabled').length;
+    const lastSyncTimes = allDevices.map((d) => d.lastSyncTime).filter(Boolean);
+    const lastSyncTime = lastSyncTimes.length ? lastSyncTimes.sort().reverse()[0] : '';
+
     return {
       totalEmployees: allEmployees.length,
       paidThisMonth: paidThisMonthCount,
@@ -286,7 +298,14 @@ class PayrollService {
       totalPayrollExpenses: roundMoney(totalPayrollExpenses),
       totalOvertimeExpenses: roundMoney(totalOvertimeExpenses),
       totalDeductions: roundMoney(totalDeductions),
-      employeesOnLeave: onLeaveCount
+      employeesOnLeave: onLeaveCount,
+      employeesPresentToday: presentCount,
+      employeesLateToday: lateCount,
+      employeesAbsentToday: absentCount,
+      totalOvertimeHoursToday: Math.round(totalOvertimeHoursToday * 10) / 10,
+      devicesOnline,
+      devicesOffline,
+      lastSyncTime
     };
   }
 
