@@ -2,7 +2,7 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'name', 'email', 'passwordHash', 'role', 'status', 'createdAt', 'updatedAt'
+  'id', 'tenantId', 'name', 'email', 'passwordHash', 'role', 'status', 'createdAt', 'updatedAt'
 ];
 
 class UserRepository extends BaseMongoRepository {

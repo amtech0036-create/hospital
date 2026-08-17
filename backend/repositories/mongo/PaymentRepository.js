@@ -2,7 +2,7 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES, generateId, extractSequence } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'receiptNumber', 'partyType', 'partyId', 'direction', 'amount',
+  'id', 'tenantId', 'receiptNumber', 'partyType', 'partyId', 'direction', 'amount',
   'previousDue', 'remainingDue', 'paymentMethod', 'referenceType', 'referenceId',
   'note', 'paymentDate', 'employeeId', 'createdBy', 'createdAt', 'updatedAt'
 ];

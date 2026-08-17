@@ -2,7 +2,7 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'challanId', 'productId', 'productName', 'quantity', 'createdAt', 'updatedAt'
+  'id', 'tenantId', 'challanId', 'productId', 'productName', 'quantity', 'createdAt', 'updatedAt'
 ];
 
 class ChallanItemRepository extends BaseMongoRepository {

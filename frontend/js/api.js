@@ -26,6 +26,9 @@ function getCurrentUser() {
 
 async function apiRequest(path, { method = 'GET', body = null, auth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
+  const tenantSubdomain = localStorage.getItem('erp_tenant_subdomain') || 'default';
+  headers['X-Tenant-Subdomain'] = tenantSubdomain;
+
   if (auth) {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;

@@ -2,7 +2,7 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'name', 'code', 'managerId', 'description', 'status', 'createdAt', 'updatedAt'
+  'id', 'tenantId', 'name', 'code', 'managerId', 'description', 'status', 'createdAt', 'updatedAt'
 ];
 
 class DepartmentRepository extends BaseMongoRepository {

@@ -1,3 +1,4 @@
+const TenantRepository = require('./mongo/TenantRepository');
 const UserRepository = require('./mongo/UserRepository');
 const CategoryRepository = require('./mongo/CategoryRepository');
 const BrandRepository = require('./mongo/BrandRepository');
@@ -33,6 +34,7 @@ const ShiftRepository = require('./mongo/ShiftRepository');
 const BiometricEmployeeRepository = require('./mongo/BiometricEmployeeRepository');
 
 module.exports = {
+  tenantRepository: new TenantRepository(),
   userRepository: new UserRepository(),
   categoryRepository: new CategoryRepository(),
   brandRepository: new BrandRepository(),

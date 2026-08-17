@@ -176,6 +176,8 @@ function renderTopbar() {
   const user = getCurrentUser();
   const isDemo = user && (user.role || '').toLowerCase() === 'demo';
 
+  const activeSubdomain = localStorage.getItem('erp_tenant_subdomain') || 'default';
+
   container.innerHTML = `
     <div class="erp-topbar">
       <div class="erp-topbar-inner">
@@ -191,6 +193,7 @@ function renderTopbar() {
           ${isDemo ? '<span class="badge bg-warning text-dark ms-3"><i class="bi bi-eye-fill me-1"></i> Demo Mode (Read Only)</span>' : ''}
         </div>
         <div class="erp-topbar-right">
+          <span class="badge bg-info text-dark me-2" style="font-size: 0.82rem;"><i class="bi bi-building me-1"></i>${activeSubdomain}</span>
           <span class="erp-user-badge">${user ? user.name + ' · ' + user.role : ''}</span>
           <button class="btn btn-sm btn-outline-secondary" id="logoutBtn">Logout</button>
         </div>

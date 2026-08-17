@@ -2,7 +2,7 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'saleReturnId', 'productId', 'productName', 'quantity', 'unitPrice',
+  'id', 'tenantId', 'saleReturnId', 'productId', 'productName', 'quantity', 'unitPrice',
   'lineTotal', 'createdAt', 'updatedAt'
 ];
 

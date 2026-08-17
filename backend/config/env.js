@@ -22,6 +22,9 @@ const env = {
   JWT_SECRET: process.env.JWT_SECRET || 'dev_only_insecure_secret',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '8h',
 
+  SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL || '',
+  SUPER_ADMIN_SECRET: process.env.SUPER_ADMIN_SECRET || '',
+
   DB_DRIVER: process.env.DB_DRIVER || 'mongo',
 
   MONGODB_URI: process.env.MONGODB_URI || '',

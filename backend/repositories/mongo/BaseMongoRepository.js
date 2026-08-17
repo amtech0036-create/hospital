@@ -1,10 +1,11 @@
 const { getCollection } = require('../../config/mongoClient');
 const { generateId, extractSequence } = require('../../utils/idGenerator');
+const { getCurrentTenantId } = require('../../context/tenantContext');
 const logger = require('../../utils/logger');
 
 /**
  * Generic CRUD repository backed by a MongoDB collection.
- * Mirrors BaseSheetRepository so services work unchanged.
+ * Supports automatic multi-tenant data isolation via tenantId scoping.
  */
 class BaseMongoRepository {
   /**
@@ -39,11 +40,10 @@ class BaseMongoRepository {
   }
 
   _buildQuery(filter = {}) {
-    const keys = Object.keys(filter);
-    if (keys.length === 0) return {};
-    const query = {};
-    for (const k of keys) {
-      query[k] = filter[k];
+    const query = { ...filter };
+    const tenantId = getCurrentTenantId();
+    if (this.columns.includes('tenantId') && tenantId && filter.tenantId === undefined) {
+      query.tenantId = tenantId;
     }
     return query;
   }
@@ -56,7 +56,12 @@ class BaseMongoRepository {
 
   async findById(id) {
     const col = await this._collection();
-    const doc = await col.findOne({ [this.idColumn]: id });
+    const query = { [this.idColumn]: id };
+    const tenantId = getCurrentTenantId();
+    if (this.columns.includes('tenantId') && tenantId) {
+      query.tenantId = tenantId;
+    }
+    const doc = await col.findOne(query);
     return this._fromDocument(doc);
   }
 
@@ -66,9 +71,15 @@ class BaseMongoRepository {
     return this._fromDocument(doc);
   }
 
+  async count(filter = {}) {
+    const col = await this._collection();
+    return col.countDocuments(this._buildQuery(filter));
+  }
+
   async _nextSequence() {
     const col = await this._collection();
     const regex = new RegExp(`^${this.idPrefix}-\\d+$`);
+    // Query without tenantId filter so generated IDs are globally unique
     const docs = await col
       .find({ [this.idColumn]: regex })
       .project({ [this.idColumn]: 1 })
@@ -85,6 +96,11 @@ class BaseMongoRepository {
     const col = await this._collection();
     const record = { ...data };
 
+    if (this.columns.includes('tenantId') && !record.tenantId) {
+      const tenantId = getCurrentTenantId();
+      if (tenantId) record.tenantId = tenantId;
+    }
+
     if (!record[this.idColumn]) {
       await this._assignId(record);
     }
@@ -94,13 +110,18 @@ class BaseMongoRepository {
     const doc = this._toDocument(record);
     await col.insertOne(doc);
 
-    logger.info(`Created record in ${this.collectionName}: ${record[this.idColumn]}`);
+    logger.info(`Created record in ${this.collectionName}: ${record[this.idColumn]} (Tenant: ${record.tenantId || 'global'})`);
     return record;
   }
 
   async update(id, data) {
     const col = await this._collection();
-    const existing = await col.findOne({ [this.idColumn]: id });
+    const query = { [this.idColumn]: id };
+    const tenantId = getCurrentTenantId();
+    if (this.columns.includes('tenantId') && tenantId) {
+      query.tenantId = tenantId;
+    }
+    const existing = await col.findOne(query);
     if (!existing) return null;
 
     const merged = { ...this._fromDocument(existing), ...data, updatedAt: new Date().toISOString() };
@@ -118,7 +139,12 @@ class BaseMongoRepository {
     }
 
     const col = await this._collection();
-    const result = await col.deleteOne({ [this.idColumn]: id });
+    const query = { [this.idColumn]: id };
+    const tenantId = getCurrentTenantId();
+    if (this.columns.includes('tenantId') && tenantId) {
+      query.tenantId = tenantId;
+    }
+    const result = await col.deleteOne(query);
     if (result.deletedCount > 0) {
       logger.info(`Deleted record from ${this.collectionName}: ${id}`);
       return true;

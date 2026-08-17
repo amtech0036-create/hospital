@@ -1,7 +1,7 @@
 const BaseMongoRepository = require('./BaseMongoRepository');
 
 const COLUMNS = [
-  'id', 'productId', 'previousPurchasePrice', 'newPurchasePrice', 'previousMarkup',
+  'id', 'tenantId', 'productId', 'previousPurchasePrice', 'newPurchasePrice', 'previousMarkup',
   'newMarkup', 'previousSellingPrice', 'newSellingPrice', 'effectiveDate',
   'changedBy', 'reason', 'createdAt', 'updatedAt'
 ];

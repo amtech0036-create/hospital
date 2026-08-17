@@ -28,5 +28,6 @@ router.use('/shifts', require('./shift.routes'));
 router.use('/biometrics', require('./biometric.routes'));
 router.use('/settings', require('./settings.routes'));
 router.use('/reports', require('./report.routes'));
+router.use('/super-admin', require('./superAdmin.routes'));
 
 module.exports = router;

@@ -2,7 +2,7 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'employeeId', 'employeeName', 'designation', 'departmentId', 'departmentName', 'payMonth',
+  'id', 'tenantId', 'employeeId', 'employeeName', 'designation', 'departmentId', 'departmentName', 'payMonth',
   'basicSalary', 'houseRent', 'medical', 'transport', 'food', 'overtime',
   'festivalBonus', 'performanceBonus', 'commission', 'otherAllowance', 'totalEarnings',
   'absentDeduction', 'lateDeduction', 'advanceDeduction', 'loanDeduction',

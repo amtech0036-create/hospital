@@ -70,8 +70,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.isProduction() ? 'combined' : 'dev'));
 
+const tenantResolverMiddleware = require('./middleware/tenant.middleware');
+
 // API
-app.use('/api', apiRoutes);
+app.use('/api', tenantResolverMiddleware, apiRoutes);
 
 // Serve the static frontend (Bootstrap + vanilla JS) so the whole app
 // can run from a single Node process during development.

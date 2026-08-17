@@ -1,7 +1,7 @@
 const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
-const COLUMNS = ['id', 'name', 'shortName', 'status', 'createdAt', 'updatedAt'];
+const COLUMNS = ['id', 'tenantId', 'name', 'shortName', 'status', 'createdAt', 'updatedAt'];
 
 class UnitRepository extends BaseMongoRepository {
   constructor() {

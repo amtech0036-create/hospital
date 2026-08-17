@@ -71,6 +71,18 @@ class UserService {
   }
 
   async create({ name, email, password, role }) {
+    const { getCurrentTenant } = require('../context/tenantContext');
+    const tenant = getCurrentTenant();
+    if (tenant) {
+      const activeUsersCount = await userRepository.count({ status: 'Active' });
+      const maxUsers = tenant.maxUsers || 15;
+      if (activeUsersCount >= maxUsers) {
+        const err = new Error(`User limit reached for current license tier (Tier ${tenant.licenseTier || 1}: max ${maxUsers} users).`);
+        err.status = 403;
+        throw err;
+      }
+    }
+
     const existing = await userRepository.findByEmail(email);
     if (existing) {
       const err = new Error('A user with this email already exists.');

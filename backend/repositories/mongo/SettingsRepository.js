@@ -1,6 +1,6 @@
 const BaseMongoRepository = require('./BaseMongoRepository');
 
-const COLUMNS = ['id', 'key', 'value', 'updatedAt'];
+const COLUMNS = ['id', 'tenantId', 'key', 'value', 'updatedAt'];
 
 class SettingsRepository extends BaseMongoRepository {
   constructor() {

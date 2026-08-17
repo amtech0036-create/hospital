@@ -18,8 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loginBtn.disabled = true;
     loginBtn.textContent = 'Signing in...';
 
+    const subdomainInput = document.getElementById('subdomain');
+    const subdomain = (subdomainInput ? subdomainInput.value : 'default').trim().toLowerCase() || 'default';
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
+
+    localStorage.setItem('erp_tenant_subdomain', subdomain);
 
     try {
       const res = await apiRequest('/auth/login', {
