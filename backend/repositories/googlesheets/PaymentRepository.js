@@ -1,17 +1,21 @@
 const BaseSheetRepository = require('./BaseSheetRepository');
-const { ID_PREFIXES } = require('../../utils/idGenerator');
+const { ID_PREFIXES, generateId, extractSequence } = require('../../utils/idGenerator');
 
 const COLUMNS = [
   'id',
+  'receiptNumber',
   'partyType',
   'partyId',
   'direction',
   'amount',
+  'previousDue',
+  'remainingDue',
   'paymentMethod',
   'referenceType',
   'referenceId',
   'note',
   'paymentDate',
+  'employeeId',
   'createdBy',
   'createdAt',
   'updatedAt'
@@ -20,6 +24,18 @@ const COLUMNS = [
 class PaymentRepository extends BaseSheetRepository {
   constructor() {
     super('Payments', COLUMNS, ID_PREFIXES.PAYMENT, 'id');
+  }
+
+  async getNextReceiptNumber() {
+    const all = await this.findAll();
+    let maxSeq = 0;
+    for (const item of all) {
+      if (item.receiptNumber) {
+        const seq = extractSequence(item.receiptNumber);
+        if (seq > maxSeq) maxSeq = seq;
+      }
+    }
+    return generateId(ID_PREFIXES.RECEIPT, maxSeq);
   }
 }
 

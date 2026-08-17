@@ -8,6 +8,8 @@ const COLUMNS = [
   'email',
   'address',
   'designation',
+  'departmentId',
+  'departmentName',
   'joinDate',
   'salary',
   'status',

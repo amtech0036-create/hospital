@@ -60,7 +60,12 @@ const ID_PREFIXES = {
   SALE_RETURN: 'SRN',
   SALE_RETURN_ITEM: 'SRI',
   PURCHASE_RETURN: 'PRN',
-  PURCHASE_RETURN_ITEM: 'PRI'
+  PURCHASE_RETURN_ITEM: 'PRI',
+  RECEIPT: 'RP',
+  DEPARTMENT: 'DEP',
+  ATTENDANCE: 'ATT',
+  LEAVE: 'LEV',
+  ADVANCE: 'ADV'
 };
 
 module.exports = { generateId, generateDateBasedId, formatDateForId, extractSequence, ID_PREFIXES };

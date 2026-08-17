@@ -5,6 +5,7 @@ const SALT_ROUNDS = 10;
 
 const SETTING_KEYS = [
   'companyName',
+  'companyLogo',
   'companyPhone',
   'companyEmail',
   'companyAddress',
@@ -14,6 +15,7 @@ const SETTING_KEYS = [
 
 const DEFAULTS = {
   companyName: 'AM Tech Solutions BD',
+  companyLogo: 'assets/logo.svg',
   companyPhone: '+880 1736002401',
   companyEmail: '',
   companyAddress: 'Baraipara Bazar Ashulia Savar Dhaka',

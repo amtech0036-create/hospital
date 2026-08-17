@@ -1,7 +1,8 @@
-const { salaryRepository } = require('../repositories');
+const { salaryRepository, employeeRepository, leaveRepository, attendanceRepository } = require('../repositories');
 const EmployeeService = require('./EmployeeService');
+const AdvanceService = require('./AdvanceService');
 
-const PAYMENT_METHODS = ['Cash', 'Bank'];
+const PAYMENT_METHODS = ['Cash', 'Bank', 'Mobile Banking', 'Card', 'Other'];
 const STATUSES = ['Pending', 'Paid'];
 
 function roundMoney(n) {
@@ -33,9 +34,10 @@ function formatPayMonthLabel(payMonth) {
 }
 
 class PayrollService {
-  async list({ employeeId, payMonth, status, from, to } = {}) {
+  async list({ employeeId, departmentId, payMonth, status, from, to } = {}) {
     let records = await salaryRepository.findAll();
     if (employeeId) records = records.filter((r) => r.employeeId === employeeId);
+    if (departmentId) records = records.filter((r) => r.departmentId === departmentId);
     if (payMonth) records = records.filter((r) => r.payMonth === normalizePayMonth(payMonth));
     if (status) records = records.filter((r) => r.status === status);
     if (from) {
@@ -64,26 +66,77 @@ class PayrollService {
     return record;
   }
 
-  async _ensureUniquePayroll(employeeId, payMonth) {
+  async _ensureUniquePayroll(employeeId, payMonth, excludeId = null) {
     const existing = await salaryRepository.findByEmployeeAndMonth(employeeId, payMonth);
-    if (existing) {
+    if (existing && existing.id !== excludeId) {
       const err = new Error(`Payroll for this employee in ${formatPayMonthLabel(payMonth)} already exists (${existing.id}).`);
       err.status = 409;
       throw err;
     }
   }
 
-  _computeNetPay(baseSalary, bonus, deductions) {
-    return roundMoney(Math.max(0, roundMoney(baseSalary) + roundMoney(bonus) - roundMoney(deductions)));
+  calculateTotals(input, defaultBasic = 0) {
+    const basicSalary = roundMoney(input.basicSalary !== undefined ? input.basicSalary : (input.baseSalary || defaultBasic));
+    const houseRent = roundMoney(input.houseRent);
+    const medical = roundMoney(input.medical);
+    const transport = roundMoney(input.transport);
+    const food = roundMoney(input.food);
+    const overtime = roundMoney(input.overtime);
+    const festivalBonus = roundMoney(input.festivalBonus || input.bonus);
+    const performanceBonus = roundMoney(input.performanceBonus);
+    const commission = roundMoney(input.commission);
+    const otherAllowance = roundMoney(input.otherAllowance);
+
+    const totalEarnings = roundMoney(
+      basicSalary + houseRent + medical + transport + food + overtime + festivalBonus + performanceBonus + commission + otherAllowance
+    );
+
+    const absentDeduction = roundMoney(input.absentDeduction);
+    const lateDeduction = roundMoney(input.lateDeduction);
+    const advanceDeduction = roundMoney(input.advanceDeduction);
+    const loanDeduction = roundMoney(input.loanDeduction);
+    const taxDeduction = roundMoney(input.taxDeduction);
+    const insuranceDeduction = roundMoney(input.insuranceDeduction);
+    const otherDeductions = roundMoney(input.otherDeductions !== undefined ? input.otherDeductions : (input.deductions || 0));
+
+    const totalDeductions = roundMoney(
+      absentDeduction + lateDeduction + advanceDeduction + loanDeduction + taxDeduction + insuranceDeduction + otherDeductions
+    );
+
+    const netSalary = Math.max(0, roundMoney(totalEarnings - totalDeductions));
+
+    return {
+      basicSalary,
+      houseRent,
+      medical,
+      transport,
+      food,
+      overtime,
+      festivalBonus,
+      performanceBonus,
+      commission,
+      otherAllowance,
+      totalEarnings,
+      absentDeduction,
+      lateDeduction,
+      advanceDeduction,
+      loanDeduction,
+      taxDeduction,
+      insuranceDeduction,
+      otherDeductions,
+      totalDeductions,
+      baseSalary: basicSalary,
+      bonus: festivalBonus + performanceBonus,
+      deductions: totalDeductions,
+      netPay: netSalary,
+      netSalary
+    };
   }
 
   async create(input, { createdBy } = {}) {
     const {
       employeeId,
       payMonth: rawPayMonth,
-      baseSalary: rawBaseSalary,
-      bonus = 0,
-      deductions = 0,
       paymentMethod = 'Cash',
       note = '',
       paidDate
@@ -105,28 +158,59 @@ class PayrollService {
       throw err;
     }
 
-    const baseSalary = roundMoney(rawBaseSalary != null ? rawBaseSalary : employee.salary);
-    const netPay = this._computeNetPay(baseSalary, bonus, deductions);
-    if (!(netPay >= 0)) {
-      const err = new Error('Net pay cannot be negative. Check bonus and deductions.');
-      err.status = 422;
-      throw err;
+    // Auto-calculate auto advance deduction if not provided
+    if (input.advanceDeduction === undefined) {
+      input.advanceDeduction = await AdvanceService.getDeductionForPayroll(employeeId);
     }
 
-    return salaryRepository.create({
+    const calc = this.calculateTotals(input, employee.salary);
+
+    const record = await salaryRepository.create({
       employeeId,
       employeeName: employee.name,
+      designation: employee.designation || '',
+      departmentId: employee.departmentId || '',
+      departmentName: employee.departmentName || '',
       payMonth,
-      baseSalary,
-      bonus: roundMoney(bonus),
-      deductions: roundMoney(deductions),
-      netPay,
+      ...calc,
       paymentMethod,
       status: 'Paid',
       paidDate: paidDate || new Date().toISOString(),
       note: String(note).trim(),
       createdBy: createdBy || 'unknown'
     });
+
+    // Auto update remaining advance balance if advance deduction was applied
+    if (calc.advanceDeduction > 0) {
+      await AdvanceService.deductForPayroll(employeeId, calc.advanceDeduction);
+    }
+
+    return record;
+  }
+
+  async update(id, input, { updatedBy } = {}) {
+    const existing = await this.getById(id);
+    const employee = await EmployeeService.getById(existing.employeeId);
+
+    const payMonth = input.payMonth ? normalizePayMonth(input.payMonth) : existing.payMonth;
+    if (payMonth !== existing.payMonth) {
+      await this._ensureUniquePayroll(existing.employeeId, payMonth, id);
+    }
+
+    const calc = this.calculateTotals({ ...existing, ...input }, employee.salary);
+
+    return salaryRepository.update(id, {
+      ...calc,
+      payMonth,
+      paymentMethod: input.paymentMethod || existing.paymentMethod,
+      note: input.note !== undefined ? String(input.note).trim() : existing.note,
+      updatedBy: updatedBy || 'unknown'
+    });
+  }
+
+  async remove(id) {
+    await this.getById(id);
+    return salaryRepository.delete(id, { hard: true });
   }
 
   async createBulk(input, { createdBy } = {}) {
@@ -150,24 +234,60 @@ class PayrollService {
         continue;
       }
 
-      const record = await salaryRepository.create({
-        employeeId: employee.id,
-        employeeName: employee.name,
-        payMonth,
-        baseSalary,
-        bonus: 0,
-        deductions: 0,
-        netPay: baseSalary,
-        paymentMethod,
-        status: 'Paid',
-        paidDate: new Date().toISOString(),
-        note: note || `Bulk payroll for ${formatPayMonthLabel(payMonth)}`,
-        createdBy: createdBy || 'unknown'
-      });
+      const autoAdvance = await AdvanceService.getDeductionForPayroll(employee.id);
+
+      const record = await this.create(
+        {
+          employeeId: employee.id,
+          payMonth,
+          basicSalary: baseSalary,
+          advanceDeduction: autoAdvance,
+          paymentMethod,
+          note: note || `Bulk payroll for ${formatPayMonthLabel(payMonth)}`
+        },
+        { createdBy }
+      );
       created.push(record);
     }
 
     return { payMonth, created, skipped };
+  }
+
+  async getDashboardStats() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const currentMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+    const todayStr = now.toISOString().slice(0, 10);
+
+    const [allEmployees, monthlySalaries, leaves, attendanceToday] = await Promise.all([
+      employeeRepository.findAll({ status: 'Active' }),
+      salaryRepository.findAll({ payMonth: currentMonth }),
+      leaveRepository.findAll({ status: 'Approved' }),
+      attendanceRepository.findAll({ date: todayStr })
+    ]);
+
+    const paidEmpIds = new Set(monthlySalaries.map((s) => s.employeeId));
+    const paidThisMonthCount = paidEmpIds.size;
+    const pendingCount = Math.max(0, allEmployees.length - paidThisMonthCount);
+
+    const totalPayrollExpenses = monthlySalaries.reduce((sum, s) => sum + Number(s.netSalary || s.netPay || 0), 0);
+    const totalOvertimeExpenses = monthlySalaries.reduce((sum, s) => sum + Number(s.overtime || 0), 0);
+    const totalDeductions = monthlySalaries.reduce((sum, s) => sum + Number(s.totalDeductions || s.deductions || 0), 0);
+
+    // Active approved leave today
+    const onLeaveCount = leaves.filter((l) => {
+      return todayStr >= l.startDate && todayStr <= l.endDate;
+    }).length;
+
+    return {
+      totalEmployees: allEmployees.length,
+      paidThisMonth: paidThisMonthCount,
+      pendingSalaries: pendingCount,
+      totalPayrollExpenses: roundMoney(totalPayrollExpenses),
+      totalOvertimeExpenses: roundMoney(totalOvertimeExpenses),
+      totalDeductions: roundMoney(totalDeductions),
+      employeesOnLeave: onLeaveCount
+    };
   }
 
   async hasPayrollForEmployee(employeeId) {

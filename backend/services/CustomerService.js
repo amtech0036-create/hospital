@@ -83,7 +83,7 @@ class CustomerService {
     return customerRepository.delete(id); // soft delete -> status = Inactive
   }
 
-  async recordTransaction({ customerId, type, amount, referenceType, referenceId, note, createdBy, transactionDate }) {
+  async recordTransaction({ customerId, type, amount, paymentMethod, referenceType, referenceId, note, createdBy, transactionDate }) {
     if (!VALID_TXN_TYPES.includes(type)) {
       const err = new Error(`type must be one of: ${VALID_TXN_TYPES.join(', ')}`);
       err.status = 422;
@@ -96,6 +96,22 @@ class CustomerService {
     }
 
     await this.getById(customerId); // throws 404 if missing
+
+    if (type === 'Payment Received' && referenceType !== 'Payment') {
+      const PaymentService = require('./PaymentService');
+      return PaymentService.create(
+        {
+          partyType: 'Customer',
+          partyId: customerId,
+          direction: 'Received',
+          amount,
+          paymentMethod: paymentMethod || 'Cash',
+          note,
+          paymentDate: transactionDate
+        },
+        { createdBy }
+      );
+    }
 
     return customerTransactionRepository.create({
       customerId,

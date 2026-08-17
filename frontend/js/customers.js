@@ -170,6 +170,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  const ledgerTypeSelect = document.getElementById('ledgerType');
+  const ledgerPaymentMethodGroup = document.getElementById('ledgerPaymentMethodGroup');
+  function toggleLedgerMethodGroup() {
+    if (ledgerTypeSelect.value === 'Payment Received') {
+      ledgerPaymentMethodGroup?.classList.remove('d-none');
+    } else {
+      ledgerPaymentMethodGroup?.classList.add('d-none');
+    }
+  }
+  ledgerTypeSelect?.addEventListener('change', toggleLedgerMethodGroup);
+  toggleLedgerMethodGroup();
+
   function renderLedgerHistory() {
     const body = document.getElementById('ledgerHistoryBody');
     const summaryEl = document.getElementById('ledgerDateSummary');
@@ -196,21 +208,56 @@ document.addEventListener('DOMContentLoaded', async () => {
       const msg = ledgerTransactions.length
         ? 'No transactions in this date range.'
         : 'No transactions yet.';
-      body.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">${msg}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">${msg}</td></tr>`;
       return;
     }
 
     body.innerHTML = filtered
-      .map(
-        (t) => `
+      .map((t) => {
+        const isPayment = t.type === 'Payment Received';
+        const paymentLookupId = (t.referenceType === 'Payment' && t.referenceId) ? t.referenceId : t.id;
+        return `
         <tr>
           <td>${new Date(t.transactionDate).toLocaleString()}</td>
           <td>${t.type}</td>
           <td>${formatMoney(t.amount)}</td>
           <td>${t.note || ''}</td>
-        </tr>`
-      )
+          <td class="text-end">
+            ${
+              isPayment
+                ? `<button class="btn btn-sm btn-outline-primary" data-print-payment="${paymentLookupId}">🖨️ Receipt</button>`
+                : '—'
+            }
+          </td>
+        </tr>`;
+      })
       .join('');
+
+    body.querySelectorAll('[data-print-payment]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pId = btn.dataset.printPayment;
+        try {
+          const customerId = ledgerCustomerSearch?.getValue();
+          const [paymentRes, company, custRes] = await Promise.all([
+            apiRequest(`/payments/${pId}`).catch(async () => {
+              // Fallback to finding payment by referenceId or list
+              const listRes = await apiRequest('/payments?partyType=Customer');
+              return { data: listRes.data.find((x) => x.id === pId || x.referenceId === pId || x.receiptNumber === pId) };
+            }),
+            getCompanySettings(),
+            apiRequest(`/customers/${customerId}`)
+          ]);
+
+          if (paymentRes?.data) {
+            showPaymentReceiptModal(paymentRes.data, custRes.data, company);
+          } else {
+            showError(new Error('Payment receipt details not found.'));
+          }
+        } catch (err) {
+          showError(err);
+        }
+      });
+    });
   }
 
   async function loadLedgerHistory() {
@@ -220,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!customerId) {
       ledgerTransactions = [];
-      body.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Select a customer above.</td></tr>';
+      body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Select a customer above.</td></tr>';
       balanceLabel.textContent = '';
       document.getElementById('ledgerDateSummary').classList.add('d-none');
       return;
@@ -249,20 +296,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    const type = document.getElementById('ledgerType').value;
+    const amount = parseFloat(document.getElementById('ledgerAmount').value);
+    const note = document.getElementById('ledgerNote').value.trim();
+    const paymentMethod = document.getElementById('ledgerPaymentMethod').value;
+
     try {
-      await apiRequest('/customers/transactions', {
+      const res = await apiRequest('/customers/transactions', {
         method: 'POST',
         body: {
           customerId,
-          type: document.getElementById('ledgerType').value,
-          amount: parseFloat(document.getElementById('ledgerAmount').value),
-          note: document.getElementById('ledgerNote').value.trim()
+          type,
+          amount,
+          paymentMethod: type === 'Payment Received' ? paymentMethod : undefined,
+          note
         }
       });
+
       document.getElementById('ledgerAmount').value = '';
       document.getElementById('ledgerNote').value = '';
-      loadLedgerHistory();
-      loadCustomers();
+      await loadLedgerHistory();
+      await loadCustomers();
+
+      if (type === 'Payment Received' && res.data) {
+        const company = await getCompanySettings();
+        const customer = allCustomers.find((c) => c.id === customerId) || { id: customerId };
+        showPaymentReceiptModal(res.data, customer, company);
+      }
     } catch (err) {
       showError(err);
     }

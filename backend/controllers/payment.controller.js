@@ -14,7 +14,10 @@ const getOne = asyncHandler(async (req, res) => {
 });
 
 const create = asyncHandler(async (req, res) => {
-  const payment = await PaymentService.create(req.body, { createdBy: req.user?.email });
+  const payment = await PaymentService.create(req.body, {
+    createdBy: req.user?.email,
+    employeeId: req.user?.id || req.user?.email
+  });
   return success(res, { message: 'Payment recorded.', data: payment, status: 201 });
 });
 

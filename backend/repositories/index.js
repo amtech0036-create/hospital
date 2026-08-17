@@ -36,6 +36,10 @@ function buildMongoRepositories() {
   const SaleReturnItemRepository = require('./mongo/SaleReturnItemRepository');
   const PurchaseReturnRepository = require('./mongo/PurchaseReturnRepository');
   const PurchaseReturnItemRepository = require('./mongo/PurchaseReturnItemRepository');
+  const DepartmentRepository = require('./mongo/DepartmentRepository');
+  const AttendanceRepository = require('./mongo/AttendanceRepository');
+  const LeaveRepository = require('./mongo/LeaveRepository');
+  const AdvanceRepository = require('./mongo/AdvanceRepository');
   return {
     userRepository: new UserRepository(),
     categoryRepository: new CategoryRepository(),
@@ -62,7 +66,11 @@ function buildMongoRepositories() {
     saleReturnRepository: new SaleReturnRepository(),
     saleReturnItemRepository: new SaleReturnItemRepository(),
     purchaseReturnRepository: new PurchaseReturnRepository(),
-    purchaseReturnItemRepository: new PurchaseReturnItemRepository()
+    purchaseReturnItemRepository: new PurchaseReturnItemRepository(),
+    departmentRepository: new DepartmentRepository(),
+    attendanceRepository: new AttendanceRepository(),
+    leaveRepository: new LeaveRepository(),
+    advanceRepository: new AdvanceRepository()
   };
 }
 
@@ -93,6 +101,10 @@ function buildGoogleSheetsRepositories() {
   const SaleReturnItemRepository = require('./googlesheets/SaleReturnItemRepository');
   const PurchaseReturnRepository = require('./googlesheets/PurchaseReturnRepository');
   const PurchaseReturnItemRepository = require('./googlesheets/PurchaseReturnItemRepository');
+  const DepartmentRepository = require('./googlesheets/DepartmentRepository');
+  const AttendanceRepository = require('./googlesheets/AttendanceRepository');
+  const LeaveRepository = require('./googlesheets/LeaveRepository');
+  const AdvanceRepository = require('./googlesheets/AdvanceRepository');
   return {
     userRepository: new UserRepository(),
     categoryRepository: new CategoryRepository(),
@@ -119,7 +131,11 @@ function buildGoogleSheetsRepositories() {
     saleReturnRepository: new SaleReturnRepository(),
     saleReturnItemRepository: new SaleReturnItemRepository(),
     purchaseReturnRepository: new PurchaseReturnRepository(),
-    purchaseReturnItemRepository: new PurchaseReturnItemRepository()
+    purchaseReturnItemRepository: new PurchaseReturnItemRepository(),
+    departmentRepository: new DepartmentRepository(),
+    attendanceRepository: new AttendanceRepository(),
+    leaveRepository: new LeaveRepository(),
+    advanceRepository: new AdvanceRepository()
   };
 }
 

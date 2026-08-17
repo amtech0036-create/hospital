@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const msg = payments.length
         ? 'No payments in this date range.'
         : 'No payments yet.';
-      body.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">${msg}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">${msg}</td></tr>`;
       return;
     }
 
@@ -112,17 +112,45 @@ document.addEventListener('DOMContentLoaded', async () => {
           p.partyType === 'Customer'
             ? customers.find((c) => c.id === p.partyId)?.name || p.partyId
             : suppliers.find((s) => s.id === p.partyId)?.name || p.partyId;
+        const receiptNo = p.receiptNumber || p.id;
+        const canPrint = p.partyType === 'Customer';
         return `
       <tr>
         <td><code>${p.id}</code></td>
+        <td><code>${receiptNo}</code></td>
         <td>${new Date(p.paymentDate).toLocaleString()}</td>
         <td>${p.partyType}: ${party}</td>
         <td class="${p.direction === 'Received' ? 'text-success' : 'text-danger'}">${p.direction}</td>
         <td>${formatMoney(p.amount)}</td>
         <td>${p.paymentMethod}</td>
+        <td class="text-end">
+          ${
+            canPrint
+              ? `<button class="btn btn-sm btn-outline-primary" data-print-receipt="${p.id}">🖨️ Print Receipt</button>`
+              : '—'
+          }
+        </td>
       </tr>`;
       })
       .join('');
+
+    body.querySelectorAll('[data-print-receipt]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const p = payments.find((x) => x.id === btn.dataset.printReceipt);
+        if (!p) return;
+        try {
+          const company = await getCompanySettings();
+          let customer = customers.find((c) => c.id === p.partyId);
+          if (!customer) {
+            const res = await apiRequest(`/customers/${p.partyId}`);
+            customer = res.data;
+          }
+          showPaymentReceiptModal(p, customer, company);
+        } catch (err) {
+          showError(err);
+        }
+      });
+    });
   }
 
   form.addEventListener('submit', async (e) => {
@@ -146,10 +174,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     try {
       const res = await apiRequest('/payments', { method: 'POST', body: payload });
-      showSuccess(`Payment recorded: ${res.data.id} — ${formatMoney(res.data.amount)}`);
+      const savedPayment = res.data;
+
       form.reset();
       document.getElementById('paymentDate').value = toLocalDatetimeValue();
       partySearch.clear();
+
+      if (savedPayment.partyType === 'Customer') {
+        const company = await getCompanySettings();
+        let customer = customers.find((c) => c.id === savedPayment.partyId);
+        if (!customer) {
+          const custRes = await apiRequest(`/customers/${savedPayment.partyId}`);
+          customer = custRes.data;
+        }
+
+        successBox.classList.remove('d-none');
+        alertBox.classList.add('d-none');
+        successBox.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <strong>Payment Saved!</strong> Receipt No: <code>${savedPayment.receiptNumber || savedPayment.id}</code> &mdash; ${formatMoney(savedPayment.amount)}
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-primary" id="successPrintBtn">🖨️ Print Receipt</button>
+              <button type="button" class="btn btn-sm btn-success" id="successPdfBtn">📥 Download PDF</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('successPrintBtn').onclick = () => printPaymentReceipt(savedPayment, customer, company);
+        document.getElementById('successPdfBtn').onclick = () => downloadPaymentReceiptPdf(savedPayment, customer, company);
+
+        showPaymentReceiptModal(savedPayment, customer, company);
+      } else {
+        showSuccess(`Payment recorded: ${savedPayment.id} — ${formatMoney(savedPayment.amount)}`);
+      }
     } catch (err) {
       showError(err);
     }

@@ -2,9 +2,13 @@ const BaseMongoRepository = require('./BaseMongoRepository');
 const { ID_PREFIXES } = require('../../utils/idGenerator');
 
 const COLUMNS = [
-  'id', 'employeeId', 'employeeName', 'payMonth', 'baseSalary', 'bonus',
-  'deductions', 'netPay', 'paymentMethod', 'status', 'paidDate',
-  'note', 'createdBy', 'createdAt', 'updatedAt'
+  'id', 'employeeId', 'employeeName', 'designation', 'departmentId', 'departmentName', 'payMonth',
+  'basicSalary', 'houseRent', 'medical', 'transport', 'food', 'overtime',
+  'festivalBonus', 'performanceBonus', 'commission', 'otherAllowance', 'totalEarnings',
+  'absentDeduction', 'lateDeduction', 'advanceDeduction', 'loanDeduction',
+  'taxDeduction', 'insuranceDeduction', 'otherDeductions', 'totalDeductions',
+  'baseSalary', 'bonus', 'deductions', 'netPay', 'netSalary',
+  'paymentMethod', 'status', 'paidDate', 'note', 'createdBy', 'createdAt', 'updatedAt'
 ];
 
 class SalaryRepository extends BaseMongoRepository {

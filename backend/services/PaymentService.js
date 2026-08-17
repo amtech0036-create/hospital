@@ -4,7 +4,7 @@ const SupplierService = require('./SupplierService');
 
 const PARTY_TYPES = ['Customer', 'Supplier'];
 const DIRECTIONS = ['Received', 'Paid'];
-const PAYMENT_METHODS = ['Cash', 'Bank'];
+const PAYMENT_METHODS = ['Cash', 'Bank', 'Mobile Banking', 'Card', 'Other'];
 
 class PaymentService {
   async list({ partyType, partyId, from, to } = {}) {
@@ -24,7 +24,12 @@ class PaymentService {
   }
 
   async getById(id) {
-    const payment = await paymentRepository.findById(id);
+    let payment = await paymentRepository.findById(id);
+    if (!payment) {
+      // Try searching by receiptNumber if not found by primary id
+      const all = await paymentRepository.findAll({ receiptNumber: id });
+      payment = all[0];
+    }
     if (!payment) {
       const err = new Error('Payment not found.');
       err.status = 404;
@@ -33,7 +38,7 @@ class PaymentService {
     return payment;
   }
 
-  async create(input, { createdBy } = {}) {
+  async create(input, { createdBy, employeeId } = {}) {
     const {
       partyType,
       partyId,
@@ -43,7 +48,9 @@ class PaymentService {
       referenceType = '',
       referenceId = '',
       note = '',
-      paymentDate
+      paymentDate,
+      receiptNumber: customReceiptNo,
+      employeeId: customEmployeeId
     } = input;
 
     if (!PARTY_TYPES.includes(partyType)) {
@@ -82,18 +89,29 @@ class PaymentService {
 
     await (partyType === 'Customer' ? CustomerService.getById(partyId) : SupplierService.getById(partyId));
 
+    const previousDue = partyType === 'Customer'
+      ? Number(await CustomerService.balance(partyId)) || 0
+      : Number(await SupplierService.balance(partyId)) || 0;
+
+    const remainingDue = Math.max(0, previousDue - amt);
+    const receiptNumber = customReceiptNo || (await paymentRepository.getNextReceiptNumber());
+    const empId = customEmployeeId || employeeId || createdBy || 'unknown';
     const txnDate = paymentDate || new Date().toISOString();
 
     const payment = await paymentRepository.create({
+      receiptNumber,
       partyType,
       partyId,
       direction,
       amount: amt,
+      previousDue,
+      remainingDue,
       paymentMethod,
       referenceType: referenceType || 'Manual',
       referenceId: referenceId || '',
       note,
       paymentDate: txnDate,
+      employeeId: empId,
       createdBy: createdBy || 'unknown'
     });
 
@@ -104,7 +122,7 @@ class PaymentService {
         amount: amt,
         referenceType: 'Payment',
         referenceId: payment.id,
-        note: note || `Payment ${payment.id}`,
+        note: note || `Payment ${receiptNumber}`,
         createdBy: createdBy || 'unknown',
         transactionDate: txnDate
       });
@@ -115,7 +133,7 @@ class PaymentService {
         amount: amt,
         referenceType: 'Payment',
         referenceId: payment.id,
-        note: note || `Payment ${payment.id}`,
+        note: note || `Payment ${receiptNumber}`,
         createdBy: createdBy || 'unknown',
         transactionDate: txnDate
       });

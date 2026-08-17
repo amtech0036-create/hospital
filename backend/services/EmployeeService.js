@@ -29,7 +29,13 @@ class EmployeeService {
   }
 
   async create(input) {
-    const { name, phone, email, address, designation, joinDate, salary, note } = input;
+    const { name, phone, email, address, designation, departmentId, departmentName, joinDate, salary, note } = input;
+    let deptName = departmentName || '';
+    if (departmentId && !deptName) {
+      const { departmentRepository } = require('../repositories');
+      const dept = await departmentRepository.findById(departmentId);
+      if (dept) deptName = dept.name;
+    }
 
     return employeeRepository.create({
       name,
@@ -37,6 +43,8 @@ class EmployeeService {
       email: email || '',
       address: address || '',
       designation: designation || '',
+      departmentId: departmentId || '',
+      departmentName: deptName,
       joinDate: joinDate || new Date().toISOString(),
       salary: salary || 0,
       note: note || '',
@@ -46,10 +54,15 @@ class EmployeeService {
 
   async update(id, input) {
     await this.getById(id);
-    const allowed = ['name', 'phone', 'email', 'address', 'designation', 'joinDate', 'salary', 'note', 'status'];
+    const allowed = ['name', 'phone', 'email', 'address', 'designation', 'departmentId', 'departmentName', 'joinDate', 'salary', 'note', 'status'];
     const payload = {};
     for (const key of allowed) {
       if (input[key] !== undefined) payload[key] = input[key];
+    }
+    if (payload.departmentId && !payload.departmentName) {
+      const { departmentRepository } = require('../repositories');
+      const dept = await departmentRepository.findById(payload.departmentId);
+      if (dept) payload.departmentName = dept.name;
     }
     return employeeRepository.update(id, payload);
   }
