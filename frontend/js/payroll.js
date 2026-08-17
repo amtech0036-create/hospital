@@ -618,8 +618,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  let isDeptCodeUserEdited = false;
+
+  function generateDepartmentCode(name) {
+    if (!name || typeof name !== 'string') return '';
+    const cleaned = name.trim().toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+    const words = cleaned.split(/\s+/).filter(Boolean);
+
+    if (words.length === 0) return '';
+
+    if (words.length === 1) {
+      const word = words[0];
+      if (word.length <= 4) return word;
+      return word.slice(0, 3);
+    }
+
+    const code = words.map((w) => w[0]).join('');
+    if (code.length < 2 && words[0].length >= 3) {
+      return words[0].slice(0, 3);
+    }
+    return code.slice(0, 5);
+  }
+
+  document.getElementById('d_name')?.addEventListener('input', (e) => {
+    const codeEl = document.getElementById('d_code');
+    if (codeEl && (!isDeptCodeUserEdited || !codeEl.value.trim())) {
+      isDeptCodeUserEdited = false;
+      codeEl.value = generateDepartmentCode(e.target.value);
+    }
+  });
+
+  document.getElementById('d_code')?.addEventListener('input', (e) => {
+    if (e.target.value.trim()) {
+      isDeptCodeUserEdited = true;
+    } else {
+      isDeptCodeUserEdited = false;
+    }
+  });
+
   document.getElementById('addDeptBtn')?.addEventListener('click', () => {
     editingDeptId = null;
+    isDeptCodeUserEdited = false;
     document.getElementById('deptForm').reset();
     document.getElementById('deptModalTitle').textContent = 'Add Department';
     deptModal.show();
@@ -629,6 +668,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const d = departments.find((x) => x.id === id);
     if (!d) return;
     editingDeptId = id;
+    isDeptCodeUserEdited = true;
     document.getElementById('deptModalTitle').textContent = `Edit ${d.name}`;
     document.getElementById('d_name').value = d.name;
     document.getElementById('d_code').value = d.code;
