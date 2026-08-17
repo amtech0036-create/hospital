@@ -846,6 +846,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadAttendance();
   });
 
+  function calculateAttendanceOvertime() {
+    const checkIn = document.getElementById('attCheckIn')?.value;
+    const checkOut = document.getElementById('attCheckOut')?.value;
+    const workingHours = parseFloat(document.getElementById('attWorkingHours')?.value) || 0;
+    const otInput = document.getElementById('attOvertimeHours');
+
+    if (!otInput) return;
+
+    if (!checkIn || !checkOut) {
+      otInput.value = 0;
+      return;
+    }
+
+    const [inH, inM] = checkIn.split(':').map(Number);
+    const [outH, outM] = checkOut.split(':').map(Number);
+
+    let inMins = inH * 60 + inM;
+    let outMins = outH * 60 + outM;
+
+    if (outMins < inMins) {
+      outMins += 24 * 60; // Overnight shift
+    }
+
+    const totalHours = (outMins - inMins) / 60;
+    const overtime = Math.max(0, totalHours - workingHours);
+    otInput.value = Math.round(overtime * 10) / 10;
+  }
+
+  ['attCheckIn', 'attCheckOut', 'attWorkingHours'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', calculateAttendanceOvertime);
+      el.addEventListener('change', calculateAttendanceOvertime);
+    }
+  });
+
   document.getElementById('attForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearAlerts();
