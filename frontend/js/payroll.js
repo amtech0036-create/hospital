@@ -310,11 +310,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const late = getVal('lateDeduction');
     const advance = getVal('advanceDeduction');
     const loan = getVal('loanDeduction');
-    const tax = getVal('taxDeduction');
+    const taxRate = getVal('taxDeduction');
+    const taxDeductionAmount = Math.round(((basic * taxRate) / 100) * 100) / 100;
+
+    const taxInfoEl = document.getElementById('taxDeductionInfo');
+    if (taxInfoEl) {
+      taxInfoEl.textContent = `Tax Amount: ${formatMoney(taxDeductionAmount)}`;
+    }
+
     const insurance = getVal('insuranceDeduction');
     const otherD = getVal('otherDeductions');
 
-    const totalDeductions = Math.round((absent + late + advance + loan + tax + insurance + otherD) * 100) / 100;
+    const totalDeductions = Math.round((absent + late + advance + loan + taxDeductionAmount + insurance + otherD) * 100) / 100;
 
     const netSalary = Math.max(0, Math.round((totalEarnings - totalDeductions) * 100) / 100);
 
@@ -374,7 +381,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       lateDeduction: parseFloat(document.getElementById('lateDeduction').value) || 0,
       advanceDeduction: parseFloat(document.getElementById('advanceDeduction').value) || 0,
       loanDeduction: parseFloat(document.getElementById('loanDeduction').value) || 0,
-      taxDeduction: parseFloat(document.getElementById('taxDeduction').value) || 0,
+      taxDeduction: Math.round((((parseFloat(document.getElementById('basicSalary').value) || 0) * (parseFloat(document.getElementById('taxDeduction').value) || 0)) / 100) * 100) / 100,
       insuranceDeduction: parseFloat(document.getElementById('insuranceDeduction').value) || 0,
       otherDeductions: parseFloat(document.getElementById('otherDeductions').value) || 0,
       paymentMethod: document.getElementById('payrollPaymentMethod').value,
@@ -591,7 +598,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('lateDeduction').value = r.lateDeduction || 0;
     document.getElementById('advanceDeduction').value = r.advanceDeduction || 0;
     document.getElementById('loanDeduction').value = r.loanDeduction || 0;
-    document.getElementById('taxDeduction').value = r.taxDeduction || 0;
+    const taxVal = r.taxDeduction || 0;
+    const taxPct = basicVal > 0 && taxVal ? Math.round(((taxVal / basicVal) * 100) * 100) / 100 : taxVal;
+    document.getElementById('taxDeduction').value = taxPct;
     document.getElementById('insuranceDeduction').value = r.insuranceDeduction || 0;
     document.getElementById('otherDeductions').value = r.otherDeductions || r.deductions || 0;
 
