@@ -19,8 +19,13 @@ function superAdminGuard(req, res, next) {
     return next();
   }
 
-  // Fallback to standard Auth JWT + Admin Role
+  // Fallback to standard Auth JWT + Admin/SuperAdmin Role on default tenant only
   return authenticate(req, res, () => {
+    const tenantSubdomain = (req.headers['x-tenant-subdomain'] || 'default').toLowerCase().trim();
+    if (tenantSubdomain !== 'default') {
+      return failure(res, { message: 'Super Admin access is restricted to the default tenant.', status: 403 });
+    }
+
     return authorize('Admin', 'SuperAdmin')(req, res, next);
   });
 }

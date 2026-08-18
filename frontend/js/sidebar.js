@@ -43,13 +43,26 @@ function getPermittedSections() {
   const user = getCurrentUser();
   const role = (user && user.role ? user.role : '').trim();
   const lowerRole = role.toLowerCase();
+  const activeSubdomain = (localStorage.getItem('erp_tenant_subdomain') || 'default').toLowerCase().trim();
+  const isDefaultTenant = activeSubdomain === 'default' || activeSubdomain === '';
 
-  // Admin & Manager have access to all sections
-  if (lowerRole === 'admin' || lowerRole === 'superadmin' || lowerRole === 'manager') {
-    return SIDEBAR_SECTIONS;
+  function filterSuperAdmin(sections) {
+    if (isDefaultTenant && (lowerRole === 'superadmin' || lowerRole === 'admin')) {
+      return sections;
+    }
+    return sections.filter((s) => s.title !== 'Super Admin');
   }
 
-  return SIDEBAR_SECTIONS.map((section) => {
+  // Admin & Manager have access to sections
+  if (lowerRole === 'admin' || lowerRole === 'superadmin' || lowerRole === 'manager') {
+    return filterSuperAdmin(SIDEBAR_SECTIONS);
+  }
+
+  const sections = SIDEBAR_SECTIONS.map((section) => {
+    if (section.title === 'Super Admin' && (!isDefaultTenant || (lowerRole !== 'admin' && lowerRole !== 'superadmin'))) {
+      return null;
+    }
+
     if (lowerRole === 'demo') {
       // Demo: Dashboard, Inventory (Products, Categories, Brands, Stock), Reports
       if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan', 'Sales', 'Customers', 'Super Admin'].includes(section.title)) {
@@ -74,6 +87,8 @@ function getPermittedSections() {
 
     return section;
   }).filter(Boolean);
+
+  return filterSuperAdmin(sections);
 }
 
 function renderSidebar(activeHref) {
