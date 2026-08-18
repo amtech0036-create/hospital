@@ -176,5 +176,10 @@ function requireAuthOrRedirect() {
     }
   }
 
+  if (path.includes('super-admin.html') && role !== 'admin' && role !== 'superadmin') {
+    window.location.href = '/dashboard.html';
+    return;
+  }
+
   applyUiPermissions();
 }

@@ -1,96 +1,73 @@
-# Inventory, Sales, Purchase, Accounting & Payroll ERP
+# Inventory, Sales, Purchase, Accounting & HR Payroll ERP System
 
-Phase 1: project skeleton, architecture, Google Sheets integration layer,
-authentication, and dashboard shell. See `docs/architecture.md` for how the
-layers fit together and `docs/database-schema.md` for the sheet structure.
+A complete Multi-Tenant Enterprise Resource Planning (ERP) System built with Node.js, Express, MongoDB Atlas, and modern web frontend.
 
-## Prerequisites
+---
 
-- Node.js 18+
-- A Google Cloud project with the **Google Sheets API** enabled
-- A Google **Service Account** with a JSON key
-- A Google Sheet, shared with the service account email (Editor access)
+## 🚀 Key Modules & Current Features
 
-## Setup
+### 1. 🏢 Multi-Tenant & Super Admin Management
+- **Tenant Isolation**: Separate data per business/store tenant.
+- **SuperAdmin Dashboard**: Manage business accounts, subdomains, user limits, and subscription tiers.
+- **Role-Based Access Control (RBAC)**: Admin, Manager, Sales User, Accountant, HR Manager roles.
 
-1. **Install dependencies**
+### 2. 📦 Inventory & Product Catalog Management
+- **Products Catalog**: Full CRUD for items, SKU, Barcode, Purchasing & Selling prices.
+- **Categories, Brands & Units**: Group products by Category, Brand, and measurement Units (kg, pcs, box, etc.).
+- **Stock Tracking**: Live stock calculation, stock entry/deduction history, and low-stock alerts.
+
+### 3. 🛍️ Sales & Customer Management
+- **Invoice & Sales Processing**: Create sales with multi-item lists, discount, tax, and automated stock deductions.
+- **Delivery Challans**: Generate and track product delivery challans linked to sales.
+- **Sales Returns & Cancellations**: Handle customer returns with automatic stock restoration and balance adjustments.
+- **Customer Directory & Ledgers**: Manage customer records, transaction histories, credit/debit balances, and payments.
+
+### 4. 🛒 Purchase & Supplier Management
+- **Purchase Orders**: Record inventory purchases from suppliers with purchase item details.
+- **Purchase Returns & Cancellations**: Handle purchase returns to suppliers and adjust stock levels accordingly.
+- **Supplier Directory & Ledgers**: Complete supplier profiles, purchase logs, outstanding balance tracking, and payments.
+
+### 5. 💰 Accounting, Expenses & Payments
+- **Standalone Payments**: Receive payments from customers or disburse payments to suppliers outside direct sales/purchases.
+- **Expense Tracking**: Categorize daily operational expenses with payment methods and reference IDs.
+- **Financial Summaries**: Dashboard KPI cards for total sales, purchases, expenses, and pending balances.
+
+### 6. 👥 HR, Attendance & Payroll Management
+- **Employee Directory**: Manage staff profiles, designations, joining dates, basic salary, and assigned departments.
+- **Departments & Work Shifts**: Organize personnel by departments and configure shift schedules.
+- **Leave Management**: Submit, approve, or reject employee leave requests.
+- **Salary Advances**: Track employee loan/salary advance requests and automated deductions.
+- **Attendance & Biometric Integration**: Track manual daily attendance and integrate with biometric attendance devices.
+- **Payroll Processing**: Automated monthly salary calculation considering basic pay, leave deductions, advance repayments, and bonuses.
+
+### 7. 🔒 System Security, Backup & Settings
+- **JWT Authentication**: Secure login with JWT token authorization and password hashing (`bcryptjs`).
+- **Database Backup & Drive Integration**: Automated and manual database backups to Google Drive.
+- **System Settings**: Configurable shop title, currency symbols, tax defaults, and branding.
+
+---
+
+## 📂 Documentation Files
+
+- [`README.md`](file:///d:/AMTechSolutions/ERP/project/README.md) – Overview & Features list
+- [`docs/architecture.md`](file:///d:/AMTechSolutions/ERP/project/docs/architecture.md) – System Architecture & Repository Pattern
+- [`docs/database-schema.md`](file:///d:/AMTechSolutions/ERP/project/docs/database-schema.md) – Database Schemas & Data Structures
+- [`docs/DEPLOY.md`](file:///d:/AMTechSolutions/ERP/project/docs/DEPLOY.md) – Deployment & Hosting Setup Guide
+
+---
+
+## 🛠️ Quick Start
+
+1. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. **Create the Google Sheet**
-   - Create a new Google Spreadsheet.
-   - Add a tab named exactly `Users`.
-   - In row 1, add these headers exactly, in this order:
-     `id, name, email, passwordHash, role, status, createdAt, updatedAt`
-   - Share the sheet with your service account's email as **Editor**.
-   - Copy the Spreadsheet ID from the URL:
-     `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit`
+2. **Configure Environment Variables**
+   Set up your `.env` file (refer to `.env.example`).
 
-3. **Configure environment variables**
+3. **Start Development Server**
    ```bash
-   cp .env.example .env
+   npm run dev
    ```
-   Fill in:
-   - `GOOGLE_SHEETS_SPREADSHEET_ID`
-   - `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-   - `GOOGLE_PRIVATE_KEY` (paste the full private key from the service
-     account JSON, keeping the `\n` sequences literally as they appear in
-     the JSON file)
-   - `JWT_SECRET` (any long random string)
-
-4. **Run the server**
-   ```bash
-   npm start
-   ```
-   The app serves both the API and the static frontend from
-   `http://localhost:4000`.
-
-5. **Create your first user**
-
-   There's no signup UI yet (Admin creates users). Call the register
-   endpoint directly, e.g. with curl:
-   ```bash
-   curl -X POST http://localhost:4000/api/auth/register \
-     -H "Content-Type: application/json" \
-     -d '{"name":"Admin User","email":"admin@example.com","password":"changeme123","role":"Admin"}'
-   ```
-
-6. **Log in**
-
-   Open `http://localhost:4000/login.html` and sign in with the account you
-   just created.
-
-## API endpoints
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| GET | /api/health | No | Health check |
-| POST | /api/auth/register | No | Create a user |
-| POST | /api/auth/login | No | Log in, returns JWT |
-| GET | /api/auth/me | Yes | Current authenticated user |
-| GET | /api/dashboard/summary | Yes | Dashboard stats |
-| GET/POST | /api/sales | Yes | List / create sales (POST: Admin, Manager, Sales User) |
-| GET | /api/sales/:id | Yes | Sale detail with line items |
-| GET/POST | /api/purchases | Yes | List / create purchases (POST: Admin, Manager, Accountant) |
-| GET | /api/purchases/:id | Yes | Purchase detail with line items |
-| POST | /api/purchases/:id/return | Yes | Partial purchase return |
-| POST | /api/purchases/:id/cancel | Yes | Cancel purchase (Admin, Manager) |
-| GET/POST | /api/challans | Yes | Delivery challans |
-| POST | /api/challans/:id/cancel | Yes | Cancel challan |
-| GET/POST | /api/payments | Yes | Standalone customer/supplier payments |
-| POST | /api/sales/:id/return | Yes | Partial sale return |
-| POST | /api/sales/:id/cancel | Yes | Cancel sale (Admin, Manager) |
-
-See route files under `backend/routes/` for the full list of Phase 1–5 endpoints.
-
-## What's next
-
-Phase 6 onward will add Expenses, Employees, Payroll, Reports, and Settings.
-
-## Migrating to MySQL later
-
-Only `backend/repositories/` changes. Add `backend/repositories/mysql/*`
-implementing the same methods as the Google Sheets repositories, wire the
-`'mysql'` case into `backend/repositories/index.js`, and set
-`DB_DRIVER=mysql`. See `docs/architecture.md`.
+   Access the web app at `http://localhost:4000`.

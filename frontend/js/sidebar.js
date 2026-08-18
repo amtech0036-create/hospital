@@ -35,6 +35,7 @@ const SIDEBAR_SECTIONS = [
   },
   { title: 'HR & Payroll', links: [{ label: 'Employees', href: '/employees.html' }, { label: 'Payroll', href: '/payroll.html' }] },
   { title: 'Reports', links: [{ label: 'Reports', href: '/reports.html' }] },
+  { title: 'Super Admin', links: [{ label: 'Super Admin Portal', href: '/super-admin.html' }] },
   { title: 'Settings', links: [{ label: 'Settings', href: '/settings.html' }] }
 ];
 
@@ -44,29 +45,29 @@ function getPermittedSections() {
   const lowerRole = role.toLowerCase();
 
   // Admin & Manager have access to all sections
-  if (lowerRole === 'admin' || lowerRole === 'manager') {
+  if (lowerRole === 'admin' || lowerRole === 'superadmin' || lowerRole === 'manager') {
     return SIDEBAR_SECTIONS;
   }
 
   return SIDEBAR_SECTIONS.map((section) => {
     if (lowerRole === 'demo') {
       // Demo: Dashboard, Inventory (Products, Categories, Brands, Stock), Reports
-      if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan', 'Sales', 'Customers'].includes(section.title)) {
+      if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan', 'Sales', 'Customers', 'Super Admin'].includes(section.title)) {
         return null;
       }
     } else if (lowerRole === 'sales' || lowerRole === 'sales user') {
       // Sales: Dashboard, Sales, Customers, Inventory
-      if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan'].includes(section.title)) {
+      if (section.title && ['Accounts', 'HR & Payroll', 'Settings', 'Purchases', 'Suppliers', 'Challan', 'Super Admin'].includes(section.title)) {
         return null;
       }
     } else if (lowerRole === 'hr') {
       // HR: Dashboard, HR & Payroll, Reports
-      if (section.title && ['Accounts', 'Purchases', 'Suppliers', 'Sales', 'Challan', 'Settings', 'Customers'].includes(section.title)) {
+      if (section.title && ['Accounts', 'Purchases', 'Suppliers', 'Sales', 'Challan', 'Settings', 'Customers', 'Super Admin'].includes(section.title)) {
         return null;
       }
     } else if (lowerRole === 'accountant') {
       // Accountant: Dashboard, Accounts, Sales, Purchases, Reports, Customers, Suppliers
-      if (section.title && ['HR & Payroll', 'Settings'].includes(section.title)) {
+      if (section.title && ['HR & Payroll', 'Settings', 'Super Admin'].includes(section.title)) {
         return null;
       }
     }
