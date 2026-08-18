@@ -9,7 +9,7 @@ async function provisionTechland() {
   if (process.env.DB_DRIVER === 'mongo' || process.env.MONGODB_URI) {
     try {
       await connectMongo();
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const subdomain = 'techland';
@@ -40,7 +40,7 @@ async function provisionTechland() {
 
   // Admin Credentials for TechLand Store
   const adminEmail = 'admin@techland.com';
-  const adminPassword = 'techlandpass123';
+  const adminPassword = 'techlandpass1234';
 
   let adminUser = await userRepository.findOne({ email: adminEmail, tenantId: tenant.id });
   const passwordHash = await bcrypt.hash(adminPassword, 10);
@@ -78,7 +78,7 @@ async function provisionTechland() {
 
   try {
     await closeMongo();
-  } catch (e) {}
+  } catch (e) { }
 
   process.exit(0);
 }

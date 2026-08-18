@@ -1,6 +1,11 @@
+require('dotenv').config();
 const http = require('http');
 
-const SUPER_SECRET = process.env.SUPER_ADMIN_SECRET || 'AniM@@149471##';
+const SUPER_SECRET = process.env.SUPER_ADMIN_SECRET;
+if (!SUPER_SECRET) {
+  console.error('ERROR: SUPER_ADMIN_SECRET environment variable is not defined.');
+  process.exit(1);
+}
 
 async function request(path, method = 'GET', body = null) {
   return new Promise((resolve, reject) => {

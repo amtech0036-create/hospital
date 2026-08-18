@@ -115,7 +115,11 @@ async function seedMultiTenant() {
   if (superAdminEmail) {
     const existingSuper = await userRepository.findOne({ email: superAdminEmail.toLowerCase() });
     if (!existingSuper) {
-      const superSecret = process.env.SUPER_ADMIN_SECRET || 'AniM@@149471##';
+      const superSecret = process.env.SUPER_ADMIN_SECRET;
+      if (!superSecret) {
+        console.error('ERROR: SUPER_ADMIN_SECRET environment variable is required to create SuperAdmin user.');
+        process.exit(1);
+      }
       const passwordHash = await bcrypt.hash(superSecret, 10);
       await userRepository.create({
         tenantId: defaultTenant.id,
