@@ -34,10 +34,17 @@ async function apiRequest(path, { method = 'GET', body = null, auth = true } = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const upperMethod = String(method).toUpperCase();
+  let fetchMethod = method;
+  if (['PUT', 'DELETE', 'PATCH'].includes(upperMethod)) {
+    headers['X-HTTP-Method-Override'] = upperMethod;
+    fetchMethod = 'POST';
+  }
+
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      method,
+      method: fetchMethod,
       headers,
       body: body ? JSON.stringify(body) : undefined
     });

@@ -67,6 +67,16 @@ app.use(
 app.use(cors(getCorsOptions()));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// HTTP Method Override middleware for shared hosting (LiteSpeed/Apache) that blocks PUT/DELETE
+app.use((req, res, next) => {
+  const override = req.headers['x-http-method-override'] || req.headers['x-method-override'] || req.query._method;
+  if (override && ['PUT', 'DELETE', 'PATCH'].includes(String(override).toUpperCase())) {
+    req.method = String(override).toUpperCase();
+  }
+  next();
+});
+
 app.use(morgan(env.isProduction() ? 'combined' : 'dev'));
 
 const tenantResolverMiddleware = require('./middleware/tenant.middleware');

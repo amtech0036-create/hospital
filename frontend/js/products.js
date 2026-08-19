@@ -40,8 +40,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function fillSelect(id, items) {
     const select = document.getElementById(id);
+    if (!items || items.length === 0) {
+      select.innerHTML = '<option value="">— None available —</option>';
+      return;
+    }
     select.innerHTML =
-      '<option value="">—</option>' + items.map((i) => `<option value="${i.id}">${i.name}</option>`).join('');
+      '<option value="">— Select —</option>' +
+      items.map((i) => `<option value="${i.id}">${i.name}${i.shortName ? ` (${i.shortName})` : ''}</option>`).join('');
   }
 
   function lookupName(list, id) {
