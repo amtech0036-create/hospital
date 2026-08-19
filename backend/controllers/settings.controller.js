@@ -1,4 +1,5 @@
 const { SettingsService, UserService } = require('../services/SettingsService');
+const BackupService = require('../services/BackupService');
 const asyncHandler = require('../utils/asyncHandler');
 const { success } = require('../utils/apiResponse');
 
@@ -32,4 +33,12 @@ const deactivateUser = asyncHandler(async (req, res) => {
   return success(res, { message: 'User deactivated.' });
 });
 
-module.exports = { getSettings, updateSettings, listUsers, createUser, updateUser, deactivateUser };
+const downloadBackup = asyncHandler(async (req, res) => {
+  const data = await BackupService.exportJson({ tenantId: req.tenantId });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="erp-database-backup-${stamp}.json"`);
+  return res.send(JSON.stringify(data, null, 2));
+});
+
+module.exports = { getSettings, updateSettings, listUsers, createUser, updateUser, deactivateUser, downloadBackup };

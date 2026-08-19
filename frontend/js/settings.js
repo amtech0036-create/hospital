@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (isAdmin) {
-    document.getElementById('usersTabNav').classList.remove('d-none');
+    document.getElementById('usersTabNav')?.classList.remove('d-none');
+    document.getElementById('backupTabNav')?.classList.remove('d-none');
   }
 
   document.querySelectorAll('.nav-link[data-tab]').forEach((btn) => {
@@ -43,6 +44,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById(btn.dataset.tab).classList.remove('d-none');
       if (btn.dataset.tab === 'usersTab') loadUsers();
     });
+  });
+
+  document.getElementById('downloadBackupJsonBtn')?.addEventListener('click', async (e) => {
+    clearAlerts();
+    const button = e.currentTarget;
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating JSON…';
+    try {
+      await downloadBackupJson();
+      showSuccess('JSON backup file downloaded successfully.');
+    } catch (err) {
+      showError(err);
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
   });
 
   async function loadCompanySettings() {

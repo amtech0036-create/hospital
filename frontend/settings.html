@@ -18,6 +18,7 @@
     <ul class="nav nav-tabs mb-3">
       <li class="nav-item"><button class="nav-link active" data-tab="companyTab">Company Profile</button></li>
       <li class="nav-item d-none" id="usersTabNav"><button class="nav-link" data-tab="usersTab">Users</button></li>
+      <li class="nav-item d-none" id="backupTabNav"><button class="nav-link" data-tab="backupTab">Backup</button></li>
     </ul>
 
     <div id="companyTab" class="tab-pane">
@@ -70,6 +71,22 @@
             <tbody id="userTableBody"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <div id="backupTab" class="tab-pane d-none">
+      <div class="stat-card col-lg-8">
+        <h6 class="mb-2">Database Backup</h6>
+        <p class="text-muted small mb-4">
+          Export full MongoDB database records as a JSON backup file.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn btn-primary" id="downloadBackupJsonBtn">📥 Download JSON Backup</button>
+        </div>
+        <p class="text-muted small mb-0">
+          The JSON backup file contains complete system collection records including Products, Sales, Purchases, Customers, Suppliers, HR & Accounts.
+        </p>
       </div>
     </div>
   </div>
