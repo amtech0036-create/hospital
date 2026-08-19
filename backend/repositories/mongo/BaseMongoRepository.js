@@ -127,7 +127,7 @@ class BaseMongoRepository {
     const merged = { ...this._fromDocument(existing), ...data, updatedAt: new Date().toISOString() };
     const doc = this._toDocument(merged);
 
-    await col.replaceOne({ [this.idColumn]: id }, doc);
+    await col.replaceOne(query, doc);
     logger.info(`Updated record in ${this.collectionName}: ${id}`);
     return merged;
   }

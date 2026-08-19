@@ -50,12 +50,26 @@ async function closeMongo() {
 
 /** Create indexes used by domain queries and ID generation. */
 async function ensureIndexes(database) {
+  // Clean up obsolete single-field unique indexes on settings collection if present
+  try {
+    const settingsCol = database.collection('settings');
+    const existingIndexes = await settingsCol.indexes();
+    for (const idx of existingIndexes) {
+      if (idx.name === 'id_1' || idx.name === 'key_1') {
+        await settingsCol.dropIndex(idx.name);
+        logger.info(`Dropped obsolete single-field index ${idx.name} on settings collection`);
+      }
+    }
+  } catch (err) {
+    // Ignore error if index doesn't exist or collection is empty
+  }
+
   const collections = [
     'users', 'categories', 'brands', 'units', 'products', 'product_price_history',
     'stock_transactions', 'customers', 'customer_transactions', 'suppliers',
     'supplier_transactions', 'sales', 'sale_items', 'sale_returns', 'sale_return_items',
     'purchases', 'purchase_items', 'purchase_returns', 'purchase_return_items',
-    'challans', 'challan_items', 'payments', 'expenses', 'employees', 'salaries', 'settings'
+    'challans', 'challan_items', 'payments', 'expenses', 'employees', 'salaries'
   ];
 
   for (const name of collections) {
@@ -63,8 +77,8 @@ async function ensureIndexes(database) {
   }
 
   const indexSpecs = [
-    { collection: 'users', indexes: [{ key: { email: 1 }, unique: true, sparse: true }] },
-    { collection: 'products', indexes: [{ key: { sku: 1 }, sparse: true }] },
+    { collection: 'users', indexes: [{ key: { tenantId: 1, email: 1 }, unique: true, sparse: true }] },
+    { collection: 'products', indexes: [{ key: { tenantId: 1, sku: 1 }, sparse: true }] },
     { collection: 'stock_transactions', indexes: [{ key: { productId: 1 } }] },
     { collection: 'customer_transactions', indexes: [{ key: { customerId: 1 } }] },
     { collection: 'supplier_transactions', indexes: [{ key: { supplierId: 1 } }] },
@@ -80,7 +94,11 @@ async function ensureIndexes(database) {
     { collection: 'challan_items', indexes: [{ key: { challanId: 1 } }] },
     { collection: 'product_price_history', indexes: [{ key: { productId: 1 } }] },
     { collection: 'salaries', indexes: [{ key: { employeeId: 1, payMonth: 1 } }] },
-    { collection: 'settings', indexes: [{ key: { key: 1 }, unique: true, sparse: true }] }
+    { collection: 'settings', indexes: [
+        { key: { tenantId: 1, key: 1 }, unique: true },
+        { key: { tenantId: 1, id: 1 }, unique: true }
+      ]
+    }
   ];
 
   for (const { collection, indexes } of indexSpecs) {
