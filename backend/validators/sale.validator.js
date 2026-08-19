@@ -5,6 +5,7 @@ const saleCreateRules = [
   body('customerId').trim().notEmpty().withMessage('customerId is required.'),
   body('saleDate').optional().isISO8601().withMessage('saleDate must be a valid ISO date.'),
   body('discount').optional().isFloat({ min: 0 }).withMessage('discount must be non-negative.'),
+  body('vatRate').optional().isFloat({ min: 0 }).withMessage('vatRate must be non-negative.'),
   body('amountPaid').optional().isFloat({ min: 0 }).withMessage('amountPaid must be non-negative.'),
   body('paymentMethod').optional().isIn(PAYMENT_METHODS).withMessage(`paymentMethod must be one of: ${PAYMENT_METHODS.join(', ')}`),
   body('note').optional().trim(),

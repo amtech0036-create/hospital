@@ -76,35 +76,6 @@ async function apiRequest(path, { method = 'GET', body = null, auth = true } = {
   return json;
 }
 
-async function downloadBackupFile(format = 'zip') {
-  const token = getToken();
-  const response = await fetch(`${API_BASE_URL}/settings/backup/download?format=${encodeURIComponent(format)}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-
-  if (!response.ok) {
-    const json = await response.json().catch(() => ({}));
-    const message = json.message || `Download failed (${response.status})`;
-    const error = new Error(message);
-    error.status = response.status;
-    throw error;
-  }
-
-  const blob = await response.blob();
-  const disposition = response.headers.get('Content-Disposition') || '';
-  const match = disposition.match(/filename="([^"]+)"/i);
-  const filename = match ? match[1] : `erp-backup.${format === 'json' ? 'json' : 'zip'}`;
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
 function isDemoUser() {
   const user = getCurrentUser();
   return Boolean(user && (user.role || '').trim().toLowerCase() === 'demo');

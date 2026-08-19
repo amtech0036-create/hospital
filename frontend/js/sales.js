@@ -119,13 +119,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       subtotal += qty * price;
     });
     const discount = parseFloat(document.getElementById('discount').value) || 0;
-    const total = Math.max(0, subtotal - discount);
+    const vatRate = parseFloat(document.getElementById('vatRate').value) || 0;
+    const baseAmount = Math.max(0, subtotal - discount);
+    const total = baseAmount * (1 + vatRate / 100);
+
     document.getElementById('subtotalLabel').textContent = formatMoney(subtotal);
     document.getElementById('totalLabel').textContent = formatMoney(total);
   }
 
   document.getElementById('addLineBtn').addEventListener('click', addLine);
   document.getElementById('discount').addEventListener('input', recalcTotals);
+  document.getElementById('vatRate').addEventListener('input', recalcTotals);
 
   document.getElementById('paymentMethod').addEventListener('change', (e) => {
     const total = parseFloat(document.getElementById('totalLabel').textContent.replace(/[^\d.]/g, '')) || 0;
@@ -165,6 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       customerId,
       saleDate: saleDateRaw ? new Date(saleDateRaw).toISOString() : undefined,
       discount: parseFloat(document.getElementById('discount').value) || 0,
+      vatRate: parseFloat(document.getElementById('vatRate').value) || 0,
       amountPaid: parseFloat(document.getElementById('amountPaid').value) || 0,
       paymentMethod: document.getElementById('paymentMethod').value,
       note: document.getElementById('note').value.trim(),

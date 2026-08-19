@@ -25,19 +25,8 @@ const env = {
   SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL || '',
   SUPER_ADMIN_SECRET: process.env.SUPER_ADMIN_SECRET || '',
 
-  DB_DRIVER: process.env.DB_DRIVER || 'mongo',
-
   MONGODB_URI: process.env.MONGODB_URI || '',
   MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || 'inventory_erp',
-
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
-  GOOGLE_PRIVATE_KEY: (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-  GOOGLE_SHEETS_SPREADSHEET_ID: process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '',
-
-  BACKUP_DRIVE_AUTO_HOURS: parseInt(process.env.BACKUP_DRIVE_AUTO_HOURS || '24', 10),
-  BACKUP_DRIVE_RETAIN_COUNT: parseInt(process.env.BACKUP_DRIVE_RETAIN_COUNT || '10', 10),
-  BACKUP_DRIVE_FOLDER_ID: process.env.BACKUP_DRIVE_FOLDER_ID || '',
-  BACKUP_DRIVE_OWNER_EMAIL: process.env.BACKUP_DRIVE_OWNER_EMAIL || '',
 
   isProduction() {
     return this.NODE_ENV === 'production';
@@ -45,12 +34,6 @@ const env = {
 
   assertMongoConfigured() {
     required('MONGODB_URI');
-  },
-
-  assertGoogleSheetsConfigured() {
-    required('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-    required('GOOGLE_PRIVATE_KEY');
-    required('GOOGLE_SHEETS_SPREADSHEET_ID');
   }
 };
 

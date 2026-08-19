@@ -81,6 +81,7 @@ function buildInvoiceDocumentHtml(sale, customer, company = {}) {
     <table>
       <tr><td>Subtotal</td><td class="num">${formatMoney(sale.subtotal)}</td></tr>
       <tr><td>Discount</td><td class="num">${formatMoney(sale.discount)}</td></tr>
+      ${sale.vatRate ? `<tr><td>VAT (${sale.vatRate}%)</td><td class="num">${formatMoney(sale.vatAmount || (sale.subtotal - sale.discount) * (sale.vatRate / 100))}</td></tr>` : ''}
       <tr><td>Total</td><td class="num">${formatMoney(sale.total)}</td></tr>
     </table>
   </div>
@@ -208,6 +209,7 @@ function buildPosReceiptHtml(sale, customer, company = {}) {
   <table class="totals-table">
     <tr><td>Subtotal:</td><td class="num">${formatMoney(sale.subtotal)}</td></tr>
     <tr><td>Discount:</td><td class="num">${formatMoney(sale.discount)}</td></tr>
+    ${sale.vatRate ? `<tr><td>VAT (${sale.vatRate}%):</td><td class="num">${formatMoney(sale.vatAmount || (sale.subtotal - (sale.discount || 0)) * (sale.vatRate / 100))}</td></tr>` : ''}
     <tr class="grand-total"><td style="padding-top:4px;">TOTAL:</td><td class="num" style="padding-top:4px;">${formatMoney(sale.total)}</td></tr>
     <tr><td>Paid:</td><td class="num">${formatMoney(sale.amountPaid)}</td></tr>
     ${due > 0 ? `<tr><td><strong>Due:</strong></td><td class="num"><strong>${formatMoney(due)}</strong></td></tr>` : ''}

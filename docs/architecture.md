@@ -8,31 +8,23 @@ backend/routes/          — URL → controller mapping, input validation wiring
         │
 backend/controllers/     — thin HTTP layer: parse req, call a service, shape response
         │
-backend/services/        — business logic. NO knowledge of HTTP or Google Sheets.
+backend/services/        — business logic. NO knowledge of HTTP or database driver details.
         │
-backend/repositories/    — index.js picks an implementation based on DB_DRIVER
+backend/repositories/    — index.js exports MongoDB repository singletons
         │
-backend/repositories/googlesheets/  — talks to Google Sheets via config/googleSheetsClient.js
+backend/repositories/mongo/ — talks to MongoDB Atlas via config/mongoClient.js
         │
-Google Sheets API
+MongoDB Atlas
 ```
 
-## Why this separation matters for the MySQL migration
+## Repository Pattern & Database Architecture
 
-- **Services never import a Sheets or MySQL class directly.** They only
-  receive repository instances from `backend/repositories/index.js`, which
-  is the single switchboard that decides which implementation to hand out
-  based on `DB_DRIVER` in `.env`.
-- **Every Sheets-backed repository implements the same contract**
+- **Services never import database driver classes directly.** They only
+  receive repository instances from `backend/repositories/index.js`.
+- **Every MongoDB repository implements the standard contract**
   (`backend/repositories/interfaces/IRepository.js`): `findAll`, `findById`,
-  `findOne`, `create`, `update`, `delete`. A future `repositories/mysql/*`
-  folder implements the same methods against MySQL tables.
-- **`googleSheetsClient.js` is the only file that constructs a Sheets API
-  client.** All reads/writes go through `BaseSheetRepository`, which every
-  sheet-specific repository (e.g. `UserRepository`) extends.
-- **IDs are stable, app-generated strings** (`PROD-000001`), never sheet row
-  numbers — so migrating rows to MySQL primary keys later doesn't break any
-  foreign-key-style references already stored elsewhere.
+  `findOne`, `create`, `update`, `delete`.
+- **IDs are stable, app-generated strings** (`PROD-000001`).
 
 ## Request flow example: Login
 

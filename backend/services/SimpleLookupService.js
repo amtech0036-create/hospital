@@ -41,7 +41,7 @@ class SimpleLookupService {
 
   async remove(id) {
     await this.getById(id);
-    return this.repository.delete(id); // soft delete (status = Inactive), see BaseSheetRepository
+    return this.repository.delete(id); // soft delete (status = Inactive)
   }
 }
 

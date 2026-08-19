@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <tfoot>
             <tr><td colspan="3" class="text-end">Subtotal</td><td>${formatMoney(sale.subtotal)}</td></tr>
             <tr><td colspan="3" class="text-end">Discount</td><td>${formatMoney(sale.discount)}</td></tr>
+            ${sale.vatRate ? `<tr><td colspan="3" class="text-end">VAT (${sale.vatRate}%)</td><td>${formatMoney(sale.vatAmount || (sale.subtotal - sale.discount) * (sale.vatRate / 100))}</td></tr>` : ''}
             <tr><td colspan="3" class="text-end fw-bold">Total</td><td class="fw-bold">${formatMoney(sale.total)}</td></tr>
           </tfoot>
         </table>

@@ -18,7 +18,6 @@
     <ul class="nav nav-tabs mb-3">
       <li class="nav-item"><button class="nav-link active" data-tab="companyTab">Company Profile</button></li>
       <li class="nav-item d-none" id="usersTabNav"><button class="nav-link" data-tab="usersTab">Users</button></li>
-      <li class="nav-item d-none" id="backupTabNav"><button class="nav-link" data-tab="backupTab">Backup</button></li>
     </ul>
 
     <div id="companyTab" class="tab-pane">
@@ -71,37 +70,6 @@
             <tbody id="userTableBody"></tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <div id="backupTab" class="tab-pane d-none">
-      <div class="stat-card col-lg-8">
-        <h6 class="mb-2">Database Backup</h6>
-        <p class="text-muted small mb-4">
-          Export all Google Sheets data or create a full spreadsheet copy in Google Drive.
-          Automatic Drive copies run on a schedule when enabled on the server.
-        </p>
-
-        <div class="border rounded p-3 mb-4 bg-light">
-          <div class="small text-muted mb-1">Last file download</div>
-          <div id="backupLastDownload" class="fw-medium">—</div>
-          <div class="small text-muted mt-3 mb-1">Last Google Drive copy</div>
-          <div id="backupLastDrive" class="fw-medium">—</div>
-          <div id="backupLastDriveLink" class="small mt-1"></div>
-          <div class="small text-muted mt-3 mb-1">Automatic Drive backup</div>
-          <div id="backupAutoSchedule" class="fw-medium">—</div>
-        </div>
-
-        <div class="d-flex flex-wrap gap-2">
-          <button type="button" class="btn btn-primary" id="downloadBackupZipBtn">Download ZIP Backup</button>
-          <button type="button" class="btn btn-outline-primary" id="downloadBackupJsonBtn">Download JSON</button>
-          <button type="button" class="btn btn-outline-success" id="driveCopyBtn">Copy to Google Drive</button>
-        </div>
-        <p class="text-muted small mt-3 mb-0">
-          ZIP includes <code>backup.json</code> plus one CSV per sheet tab.
-          Drive copies are saved to your configured backup folder in Google Drive.
-          Set <code>BACKUP_DRIVE_FOLDER_ID</code> in <code>.env</code> (see setup steps in docs).
-        </p>
       </div>
     </div>
   </div>

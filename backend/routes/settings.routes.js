@@ -17,6 +17,4 @@ router.post('/users', authorize('Admin'), userCreateRules, validate, controller.
 router.put('/users/:id', authorize('Admin'), userUpdateRules, validate, controller.updateUser);
 router.delete('/users/:id', authorize('Admin'), controller.deactivateUser);
 
-router.use('/backup', require('./backup.routes'));
-
 module.exports = router;

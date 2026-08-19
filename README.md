@@ -40,9 +40,8 @@ A complete Multi-Tenant Enterprise Resource Planning (ERP) System built with Nod
 - **Attendance & Biometric Integration**: Track manual daily attendance and integrate with biometric attendance devices.
 - **Payroll Processing**: Automated monthly salary calculation considering basic pay, leave deductions, advance repayments, and bonuses.
 
-### 7. 🔒 System Security, Backup & Settings
+### 7. 🔒 System Security & Settings
 - **JWT Authentication**: Secure login with JWT token authorization and password hashing (`bcryptjs`).
-- **Database Backup & Drive Integration**: Automated and manual database backups to Google Drive.
 - **System Settings**: Configurable shop title, currency symbols, tax defaults, and branding.
 
 ---

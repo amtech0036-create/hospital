@@ -1,16 +1,9 @@
 /**
  * This file is documentation-as-code. It defines the contract every
- * repository must implement, regardless of the underlying storage engine
- * (Google Sheets today, MySQL later).
+ * repository must implement for storage engines.
  *
- * Services depend ONLY on this shape. They never import a Google Sheets
- * or MySQL specific class directly — they receive a repository instance
- * (see backend/repositories/index.js) that already satisfies this contract.
- *
- * Swapping storage engines later means writing a new repositories/mysql/*
- * folder that implements the same methods, then changing repositories/index.js
- * to pick it based on config.DB_DRIVER. Nothing in services/ or controllers/
- * has to change.
+ * Services depend ONLY on this shape. They receive repository instances
+ * (see backend/repositories/index.js) that satisfy this contract.
  *
  * interface IRepository<T> {
  *   findAll(filter?: object): Promise<T[]>

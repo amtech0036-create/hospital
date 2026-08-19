@@ -50,6 +50,7 @@ class SaleService {
       customerId,
       saleDate,
       discount = 0,
+      vatRate = 0,
       amountPaid = 0,
       paymentMethod = 'Credit',
       note = '',
@@ -119,7 +120,11 @@ class SaleService {
       throw err;
     }
 
-    const total = roundMoney(subtotal - discountAmount);
+    const vat = roundMoney(vatRate);
+    const baseAfterDiscount = Math.max(0, subtotal - discountAmount);
+    const vatAmount = roundMoney(baseAfterDiscount * (vat / 100));
+    const total = roundMoney(baseAfterDiscount + vatAmount);
+
     const paid = roundMoney(amountPaid);
     if (paid < 0 || paid > total) {
       const err = new Error('amountPaid must be between 0 and total.');
@@ -134,6 +139,8 @@ class SaleService {
       saleDate: txnDate,
       subtotal,
       discount: discountAmount,
+      vatRate: vat,
+      vatAmount,
       total,
       amountPaid: paid,
       paymentMethod,

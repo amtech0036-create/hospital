@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (isAdmin) {
     document.getElementById('usersTabNav').classList.remove('d-none');
-    document.getElementById('backupTabNav').classList.remove('d-none');
   }
 
   document.querySelectorAll('.nav-link[data-tab]').forEach((btn) => {
@@ -43,79 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab).classList.remove('d-none');
       if (btn.dataset.tab === 'usersTab') loadUsers();
-      if (btn.dataset.tab === 'backupTab') loadBackupStatus();
     });
-  });
-
-  function formatDateTime(iso) {
-    if (!iso) return '—';
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleString();
-  }
-
-  async function loadBackupStatus() {
-    if (!isAdmin) return;
-    try {
-      const res = await apiRequest('/settings/backup/status');
-      const data = res.data;
-      document.getElementById('backupLastDownload').textContent = formatDateTime(data.lastDownloadAt);
-      const drive = data.lastDriveCopy;
-      document.getElementById('backupLastDrive').textContent = drive
-        ? `${drive.name} · ${formatDateTime(drive.at)}`
-        : '—';
-      const linkEl = document.getElementById('backupLastDriveLink');
-      if (drive?.url) {
-        linkEl.innerHTML = `<a href="${drive.url}" target="_blank" rel="noopener">Open copy in Google Drive</a>`;
-      } else {
-        linkEl.textContent = '';
-      }
-      const hours = data.autoDriveBackupHours;
-      document.getElementById('backupAutoSchedule').textContent =
-        hours > 0 ? `Every ${hours} hour(s) · keeping last ${data.driveRetainCount} copies` : 'Disabled on server';
-    } catch (err) {
-      showError(err);
-    }
-  }
-
-  async function withBackupButtonLoading(button, task) {
-    const original = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Working…';
-    try {
-      await task();
-    } finally {
-      button.disabled = false;
-      button.innerHTML = original;
-    }
-  }
-
-  document.getElementById('downloadBackupZipBtn')?.addEventListener('click', async (e) => {
-    clearAlerts();
-    await withBackupButtonLoading(e.currentTarget, async () => {
-      await downloadBackupFile('zip');
-      showSuccess('ZIP backup downloaded.');
-      loadBackupStatus();
-    }).catch(showError);
-  });
-
-  document.getElementById('downloadBackupJsonBtn')?.addEventListener('click', async (e) => {
-    clearAlerts();
-    await withBackupButtonLoading(e.currentTarget, async () => {
-      await downloadBackupFile('json');
-      showSuccess('JSON backup downloaded.');
-      loadBackupStatus();
-    }).catch(showError);
-  });
-
-  document.getElementById('driveCopyBtn')?.addEventListener('click', async (e) => {
-    clearAlerts();
-    if (!confirm('Create a full copy of the spreadsheet in Google Drive?')) return;
-    await withBackupButtonLoading(e.currentTarget, async () => {
-      const res = await apiRequest('/settings/backup/drive-copy', { method: 'POST' });
-      showSuccess(res.message || 'Drive backup created.');
-      loadBackupStatus();
-    }).catch(showError);
   });
 
   async function loadCompanySettings() {

@@ -1,10 +1,9 @@
 /**
  * Generates stable, human-readable IDs such as PROD-000001, CUS-000001.
  *
- * These IDs are stored as a real column in the sheet and must NEVER be
- * derived from row position, because rows can be sorted, filtered, or
- * deleted. The repository layer is responsible for finding the current
- * max sequence number for a given prefix before calling this.
+ * These IDs are stored as a column in the database and must NEVER be
+ * derived from row position or array indices. The repository layer is
+ * responsible for finding the current max sequence number for a given prefix before calling this.
  */
 function generateId(prefix, currentMaxSequence) {
   const next = (currentMaxSequence || 0) + 1;

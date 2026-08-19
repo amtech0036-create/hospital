@@ -1,8 +1,6 @@
-# Google Sheets Database Schema
+# ERP Database Schema
 
-Create **one spreadsheet** with one tab per table below. Row 1 of every tab
-must contain exactly these column headers, in this order — the repository
-layer reads/writes by column position, so the header row is the contract.
+This document outlines the logical table/collection structures and column definitions for the Inventory ERP system.
 
 ## Implemented in Phase 1
 
@@ -336,9 +334,9 @@ Partial returns use the return tables above; full cancel is blocked if any retur
 26. Settings
 27. Audit_Logs
 
-Each of these will get its own column spec + repository class in the phase
-that implements it, following the exact pattern used for `Users`
-(`backend/repositories/googlesheets/UserRepository.js`).
+Each of these gets its own schema and repository class,
+following the pattern used for `Users`
+(`backend/repositories/mongo/UserRepository.js`).
 
 ## ID conventions
 

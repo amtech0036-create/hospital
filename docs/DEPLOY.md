@@ -91,23 +91,9 @@ In **Environment → Add Environment Variable**, add:
 | `NODE_ENV` | `production` |
 | `JWT_SECRET` | Long random string (e.g. 32+ chars) |
 | `JWT_EXPIRES_IN` | `8h` |
-| `DB_DRIVER` | `googlesheets` |
-| `GOOGLE_SHEETS_SPREADSHEET_ID` | Your spreadsheet ID |
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service account email |
-| `GOOGLE_PRIVATE_KEY` | Full private key — **one line**, keep `\n` as literal `\n` |
+| `MONGODB_URI` | Your MongoDB Atlas connection URI |
+| `MONGODB_DB_NAME` | `inventory_erp` |
 | `CORS_ORIGIN` | `*` |
-| `BACKUP_DRIVE_AUTO_HOURS` | `0` (disable auto backup on free tier) |
-| `BACKUP_DRIVE_FOLDER_ID` | Optional — your backup folder ID |
-
-**Important for `GOOGLE_PRIVATE_KEY` on Render:**
-
-Paste exactly like in `.env`, on one line:
-
-```
------BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n
-```
-
-Do **not** paste real newlines — use `\n` characters.
 
 ### 5. Deploy
 
@@ -229,7 +215,6 @@ Webuzo allows running this ERP either via its built-in **NodeJS App Manager** (G
 - [ ] Use a strong `JWT_SECRET` in production
 - [ ] Consider disabling `/api/auth/register` after creating users (or restrict by IP later)
 - [ ] Never commit `.env` to GitHub
-- [ ] Google Sheet shared only with service account (Editor)
 
 ---
 
@@ -238,11 +223,9 @@ Webuzo allows running this ERP either via its built-in **NodeJS App Manager** (G
 | Problem | Fix |
 |---------|-----|
 | Build fails | Check Node 18+; run `npm install` locally first |
-| 502 / app won't start | Check Render logs; verify all Google env vars are set |
-| Google Sheets error | Share spreadsheet with service account email |
-| Private key error | Re-paste key with `\n` escapes, no extra quotes issues |
+| 502 / app won't start | Check Render logs; verify `MONGODB_URI` environment variable is set |
+| Database connection error | Verify MongoDB Atlas IP Access List (allow `0.0.0.0/0` for cloud hosts) |
 | Slow first load | Normal on free tier (cold start) |
-| Backup fails | Set `BACKUP_DRIVE_AUTO_HOURS=0`; use ZIP download instead |
 
 ---
 

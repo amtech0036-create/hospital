@@ -8,7 +8,6 @@ const env = require('./config/env');
 const apiRoutes = require('./routes');
 const { notFound, errorHandler } = require('./middleware/error.middleware');
 const logger = require('./utils/logger');
-const { startBackupScheduler } = require('./jobs/backupScheduler');
 const { connectMongo, closeMongo } = require('./config/mongoClient');
 
 function isAllowedOrigin(origin, allowed) {
@@ -83,22 +82,16 @@ app.use(notFound);
 app.use(errorHandler);
 
 async function startServer() {
-  if (env.DB_DRIVER === 'mongo') {
-    await connectMongo();
-  }
+  await connectMongo();
 
   const server = app.listen(env.PORT, '0.0.0.0', () => {
     logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
-    logger.info(`DB driver: ${env.DB_DRIVER}`);
-    startBackupScheduler();
   });
 
   async function shutdown(signal) {
     logger.info(`${signal} received — shutting down`);
     server.close(async () => {
-      if (env.DB_DRIVER === 'mongo') {
-        await closeMongo();
-      }
+      await closeMongo();
       process.exit(0);
     });
   }
