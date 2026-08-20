@@ -98,6 +98,15 @@ async function startServer() {
     logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      logger.error(`Port ${env.PORT} is already in use by another process. Kill the existing Node server process or change PORT in .env.`);
+      process.exit(1);
+    } else {
+      logger.error('Server error:', err.message);
+    }
+  });
+
   async function shutdown(signal) {
     logger.info(`${signal} received — shutting down`);
     server.close(async () => {

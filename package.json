@@ -6,7 +6,20 @@
   "scripts": {
     "start": "node backend/server.js",
     "start:legacy": "node --openssl-legacy-provider backend/server.js",
-    "dev": "node --watch backend/server.js"
+    "dev": "node --watch backend/server.js",
+    "seed:diagnostics": "node scripts/seed-diagnostics.js",
+    "seed:tenant": "node scripts/seed-tenant.js",
+    "test:diagnostics": "node scripts/test-diagnostic-workflow.js",
+    "test:phase11": "node scripts/test-phase11-e2e.js",
+    "migrate:db": "node scripts/migrate-database.js",
+    "verify:db": "node scripts/verify-indexes-and-cleanup.js",
+    "test:subphase14.1": "node scripts/test-subphase14.1-opd.js",
+    "test:subphase14.2": "node scripts/test-subphase14.2-emr.js",
+    "test:subphase14.3": "node scripts/test-subphase14.3-pharmacy.js",
+    "test:subphase14.4": "node scripts/test-subphase14.4-ipd.js",
+    "test:subphase14.5": "node scripts/test-subphase14.5-billing.js",
+    "test:subphase14.6": "node scripts/test-subphase14.6-store-bloodbank.js",
+    "test:phase14": "node scripts/test-subphase14.1-opd.js && node scripts/test-subphase14.2-emr.js && node scripts/test-subphase14.3-pharmacy.js && node scripts/test-subphase14.4-ipd.js && node scripts/test-subphase14.5-billing.js && node scripts/test-subphase14.6-store-bloodbank.js"
   },
   "engines": {
     "node": ">=18"

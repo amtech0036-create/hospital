@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Prescription Pad — HIS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+    <div id="rxAlert" class="alert alert-danger d-none"></div>
+
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body py-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <h5 class="mb-0"><i class="bi bi-file-earmark-medical-fill text-primary me-2"></i>Doctor Electronic Prescription Pad</h5>
+            <small class="text-muted">Generate digital prescriptions with structured medicine dosages and recommended diagnostic tests.</small>
+          </div>
+          <button id="submitPrescriptionBtn" class="btn btn-success btn-sm">
+            <i class="bi bi-printer-fill me-1"></i>Finalize & Generate Prescription
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <form id="rxForm">
+      <!-- Patient & Doctor Metadata Header -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Select Patient (UHID) *</label>
+              <select id="rxPatientSelect" class="form-select form-select-sm" required>
+                <option value="">-- Select Patient --</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Attending Doctor *</label>
+              <select id="rxDoctorSelect" class="form-select form-select-sm" required>
+                <option value="">-- Select Doctor --</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Clinical Diagnosis *</label>
+              <input type="text" id="rxDiagnosis" class="form-control form-control-sm" placeholder="e.g. Essential Hypertension, URTI" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Chief Symptoms</label>
+              <input type="text" id="rxSymptoms" class="form-control form-control-sm" placeholder="e.g. High fever for 3 days, headache, weakness" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Next Follow-Up Date</label>
+              <input type="date" id="rxFollowUpDate" class="form-control form-control-sm" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prescribed Medicines Section -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold"><i class="bi bi-capsule me-2 text-primary"></i>Prescribed Medicines (Rx)</h6>
+          <button type="button" id="addMedicineRowBtn" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>Add Medicine</button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3" style="width: 25%;">Generic Name</th>
+                  <th style="width: 25%;">Brand Name</th>
+                  <th style="width: 15%;">Dosage</th>
+                  <th style="width: 15%;">Frequency</th>
+                  <th style="width: 15%;">Duration</th>
+                  <th class="text-end pe-3" style="width: 5%;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="rxMedicineTableBody">
+                <!-- Rows injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Diagnostic Tests Checklist -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-bold"><i class="bi bi-ui-checks me-2 text-primary"></i>Recommended Diagnostic Investigations</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input test-check" type="checkbox" value="LAB-CBC" id="checkCbc"><label class="form-check-label" for="checkCbc">Complete Blood Count (CBC)</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input test-check" type="checkbox" value="LAB-LFT" id="checkLft"><label class="form-check-label" for="checkLft">Liver Function Test (LFT)</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input test-check" type="checkbox" value="LAB-KFT" id="checkKft"><label class="form-check-label" for="checkKft">Kidney Function Test (KFT)</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input test-check" type="checkbox" value="RAD-XRAY-CHEST" id="checkXray"><label class="form-check-label" for="checkXray">Chest X-Ray (PA View)</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input test-check" type="checkbox" value="RAD-MRI-BRAIN" id="checkMri"><label class="form-check-label" for="checkMri">MRI Brain (Multi-planar)</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input test-check" type="checkbox" value="RAD-CT-CHEST" id="checkCt"><label class="form-check-label" for="checkCt">CT Scan Chest</label></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clinical Advice Notes -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+          <label class="form-label fw-bold">Clinical Advice & Notes</label>
+          <textarea id="rxClinicalNotes" class="form-control form-control-sm" rows="3" placeholder="e.g. Rest for 3 days, drink plenty of water, avoid cold beverages."></textarea>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/prescription.js"></script>
+</body>
+</html>

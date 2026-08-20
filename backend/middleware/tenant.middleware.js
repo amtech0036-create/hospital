@@ -49,9 +49,19 @@ async function tenantResolverMiddleware(req, res, next) {
     // Default fallback tenant for root domain / direct API access
     tenant = await tenantRepository.findBySubdomain('default');
     if (!tenant) {
-      // Fallback: get first active tenant if default doesn't exist yet
-      const all = await tenantRepository.findAll();
-      tenant = all.find((t) => t.isActive !== false) || null;
+      try {
+        tenant = await tenantRepository.create({
+          id: 'TNT-000001',
+          name: 'Default Hospital Tenant',
+          subdomain: 'default',
+          contactEmail: 'admin@amtechslnbderp.com',
+          isActive: true,
+          maxUsers: 100
+        });
+      } catch (err) {
+        const all = await tenantRepository.findAll();
+        tenant = all[0] || null;
+      }
     }
   }
 

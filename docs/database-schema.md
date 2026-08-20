@@ -366,5 +366,86 @@ following the pattern used for `Users`
 | Purchase Return Item | PRI | PRI-000001 |
 | Employee | EMP | EMP-000001 |
 | Expense | EXP | EXP-000001 |
+| Patient | PAT | PAT-000001 |
+| Diagnostic Test | DTEST | DTEST-000001 |
+| Diagnostic Order | DORD | DORD-000001 |
+| Diagnostic Result | DRES | DRES-000001 |
+| Doctor Commission | DCOM | DCOM-000001 |
+| Clinical Audit Log | AUD | AUD-000001 |
 
 IDs are never derived from row position — see `backend/utils/idGenerator.js`.
+
+## Clinical Diagnostic Information System (HIS / LIS / RIS)
+
+### Patients (`patients`)
+Multi-tenant UHID patient registration entity.
+- `tenantId` (string, indexed)
+- `uhid` (string, unique per tenant format: `UHID-TENANT-YYYYMMDD-XXXX`)
+- `fullName` (string)
+- `gender` (Male / Female / Other)
+- `age` ({ value: number, unit: 'Years'|'Months'|'Days' })
+- `phone` (string, indexed)
+- `bloodGroup` (A+, A-, B+, B-, AB+, AB-, O+, O-, Unknown)
+- `emergencyContact` ({ name, relationship, phone })
+- `referredDoctor` ({ name, hospital, contact })
+
+### Diagnostic Tests (`diagnostic_tests`)
+Pathology reference range parameters & Radiology modality master catalog.
+- `tenantId` (string, indexed)
+- `code` (string, e.g. `LAB-CBC`, `RAD-MRI-BRAIN`)
+- `name` (string)
+- `department` (Pathology / Radiology / Cardiology / Other)
+- `category` (Hematology, Biochemistry, MRI, CT Scan, X-Ray, USG)
+- `price` (number)
+- `parameters` array (parameterName, unit, referenceRanges: [{ gender, minAge, maxAge, rangeLow, rangeHigh }])
+- `radiologyDetails` ({ modality, bodyPart, instructions })
+
+### Diagnostic Orders (`diagnostic_orders`)
+Patient billing invoice and specimen tube worklist.
+- `tenantId` (string, indexed)
+- `invoiceNumber` (string, format: `INV-YYYYMMDD-XXXX`)
+- `orderBarcode` (string, Code128 string: `INV-<TENANT>-<TIMESTAMP>`)
+- `uhid` (string, indexed)
+- `patientSnapshot` ({ fullName, age, gender, phone })
+- `tests` array ({ testId, testCode, testName, department, price, specimenBarcode, sampleStatus })
+- `financials` ({ totalAmount, discountAmount, taxAmount, netAmount, paidAmount, dueAmount, paymentStatus })
+- `isEmergency` (boolean, Trauma Break-Glass flag)
+- `status` (pending / in_progress / completed / cancelled)
+
+### Diagnostic Results (`diagnostic_results`)
+Multi-stage LIS Pathology parameters and RIS Radiology narrative reports.
+- `tenantId` (string, indexed)
+- `orderId` (string, indexed)
+- `invoiceNumber` (string)
+- `uhid` (string, indexed)
+- `specimenBarcode` (string, indexed)
+- `department` (Pathology / Radiology)
+- `status` (pending -> sample_collected -> result_ready -> authorized)
+- `pathologyResults` array ({ parameterName, resultValue, unit, referenceRange, isCritical, remarks })
+- `radiologyReport` ({ clinicalHistory, technique, findings, impression, dcmStudyInstanceUID, attachmentUrls })
+- `authorizedBy` (string)
+- `digitalSignature` ({ signatureHash, signatureUrl, signedBy })
+
+### Doctor Commissions (`doctor_commissions`)
+Referring doctor referral commission ledger and payout tracking.
+- `tenantId` (string, indexed)
+- `doctorName` (string, indexed)
+- `orderId` (string)
+- `invoiceNumber` (string)
+- `totalOrderAmount` (number)
+- `commissionRate` (number, default 10%)
+- `commissionAmount` (number)
+- `payoutStatus` (Unpaid / Paid)
+- `paidAt` (datetime)
+
+### Clinical Audit Logs (`clinical_audit_logs`)
+HIPAA/PHI compliance access control and trauma break-glass audit trail.
+- `tenantId` (string, indexed)
+- `userId` (string)
+- `userRole` (string)
+- `action` (VIEW / EDIT / DELETE / AUTHORIZE / PRINT / BREAK_GLASS)
+- `entity` (Patient / DiagnosticOrder / DiagnosticResult)
+- `entityId` (string)
+- `ipAddress` (string)
+- `details` (string)
+

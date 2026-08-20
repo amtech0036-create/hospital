@@ -779,25 +779,52 @@ td .search-select-wrap,
   }
 }
 
-/* ---------- Print ---------- */
+/* ---------- Print Optimization ---------- */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  #invoicePrintArea,
-  #invoicePrintArea * {
-    visibility: visible;
-  }
-
-  #invoicePrintArea {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+  body {
+    background: #fff !important;
+    color: #000 !important;
   }
 
   .erp-sidebar,
+  .erp-topbar,
+  .btn,
+  .btn-close,
+  .modal-footer,
+  .modal-header .btn-close,
+  .alert,
+  .no-print,
+  #erpSidebar,
+  #erpTopbar {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .erp-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  #printableInvoice,
+  #printableInvoice *,
+  #invoicePrintArea,
+  #invoicePrintArea * {
+    visibility: visible !important;
+  }
+
+  #printableInvoice,
+  #invoicePrintArea {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+}
   .erp-sidebar-backdrop,
   .erp-topbar {
     display: none !important;

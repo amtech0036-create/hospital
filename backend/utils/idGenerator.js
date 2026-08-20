@@ -67,7 +67,11 @@ const ID_PREFIXES = {
   ADVANCE: 'ADV',
   DEVICE: 'DEV',
   SHIFT: 'SHF',
-  BIOMETRIC: 'BIO'
+  BIOMETRIC: 'BIO',
+  PATIENT: 'PAT',
+  DIAGNOSTIC_TEST: 'DTEST',
+  DIAGNOSTIC_ORDER: 'DORD',
+  DIAGNOSTIC_RESULT: 'DRES'
 };
 
 module.exports = { generateId, generateDateBasedId, formatDateForId, extractSequence, ID_PREFIXES };

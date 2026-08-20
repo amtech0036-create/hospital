@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const TIER_NAMES = {
-    1: 'Tier 1 (Starter - Max 15)',
-    2: 'Tier 2 (Growth - Max 50)',
-    3: 'Tier 3 (Pro - Max 100)',
-    4: 'Tier 4 (Enterprise - Max 500)'
+    1: 'Starter / Clinic (Max 25)',
+    2: 'Diagnostic (Max 50)',
+    3: 'Hospital Standard (Max 150)',
+    4: 'Enterprise (Max 500)'
   };
 
   async function loadTenants() {
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const total = tenants.length;
     const active = tenants.filter(t => t.isActive !== false).length;
     const suspended = total - active;
-    const totalUsers = tenants.reduce((acc, t) => acc + (t.activeUserCount || 0), 0);
+    const totalUsers = tenants.reduce((acc, t) => acc + (t.userCount !== undefined ? t.userCount : t.activeUserCount || 0), 0);
 
     document.getElementById('statTotalTenants').textContent = total;
     document.getElementById('statActiveTenants').textContent = active;
@@ -84,12 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const TIER_LIMIT_MAP = { 1: 25, 2: 50, 3: 150, 4: 500 };
+
     tenantsTableBody.innerHTML = filtered.map(t => {
       const isAct = t.isActive !== false;
       const tierBadgeClass = `tier-badge-${t.licenseTier || 1}`;
       const tierName = TIER_NAMES[t.licenseTier || 1] || `Tier ${t.licenseTier}`;
-      const activeCount = t.activeUserCount || 0;
-      const maxLimit = t.maxUsers || 15;
+      const activeCount = t.userCount !== undefined ? t.userCount : (t.activeUserCount || 0);
+      const maxLimit = TIER_LIMIT_MAP[t.licenseTier || 1] || t.userLimit || t.maxUsers || 25;
       const usagePct = Math.min(100, Math.round((activeCount / maxLimit) * 100));
 
       const expiryStr = t.expiresAt ? new Date(t.expiresAt).toLocaleDateString() : 'N/A';

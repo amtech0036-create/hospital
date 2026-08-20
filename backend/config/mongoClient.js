@@ -18,12 +18,13 @@ async function connectMongo() {
 
   env.assertMongoConfigured();
 
+  const dbName = process.env.DB_NAME || env.MONGODB_DB_NAME || 'Hospital_ERP_DB';
   client = new MongoClient(env.MONGODB_URI);
   await client.connect();
-  db = client.db(env.MONGODB_DB_NAME);
+  db = client.db(dbName);
 
   await ensureIndexes(db);
-  logger.info(`Connected to MongoDB database: ${env.MONGODB_DB_NAME}`);
+  logger.info(`Connected to MongoDB database: ${dbName}`);
   return db;
 }
 
@@ -69,7 +70,8 @@ async function ensureIndexes(database) {
     'stock_transactions', 'customers', 'customer_transactions', 'suppliers',
     'supplier_transactions', 'sales', 'sale_items', 'sale_returns', 'sale_return_items',
     'purchases', 'purchase_items', 'purchase_returns', 'purchase_return_items',
-    'challans', 'challan_items', 'payments', 'expenses', 'employees', 'salaries'
+    'challans', 'challan_items', 'payments', 'expenses', 'employees', 'salaries',
+    'patients', 'diagnostic_tests', 'diagnostic_orders', 'diagnostic_results'
   ];
 
   for (const name of collections) {
@@ -94,6 +96,21 @@ async function ensureIndexes(database) {
     { collection: 'challan_items', indexes: [{ key: { challanId: 1 } }] },
     { collection: 'product_price_history', indexes: [{ key: { productId: 1 } }] },
     { collection: 'salaries', indexes: [{ key: { employeeId: 1, payMonth: 1 } }] },
+    { collection: 'patients', indexes: [{ key: { tenantId: 1, uhid: 1 }, unique: true }, { key: { tenantId: 1, phone: 1 } }] },
+    { collection: 'diagnostic_tests', indexes: [{ key: { tenantId: 1, code: 1 }, unique: true }, { key: { tenantId: 1, department: 1 } }] },
+    { collection: 'diagnostic_orders', indexes: [
+        { key: { tenantId: 1, invoiceNumber: 1 }, unique: true },
+        { key: { tenantId: 1, orderBarcode: 1 } },
+        { key: { tenantId: 1, uhid: 1 } },
+        { key: { tenantId: 1, "financials.paymentStatus": 1 } }
+      ]
+    },
+    { collection: 'diagnostic_results', indexes: [
+        { key: { tenantId: 1, orderId: 1, testId: 1 }, sparse: true },
+        { key: { tenantId: 1, specimenBarcode: 1 }, sparse: true },
+        { key: { tenantId: 1, department: 1, status: 1 } }
+      ]
+    },
     { collection: 'settings', indexes: [
         { key: { tenantId: 1, key: 1 }, unique: true },
         { key: { tenantId: 1, id: 1 }, unique: true }
@@ -105,7 +122,19 @@ async function ensureIndexes(database) {
     const col = database.collection(collection);
     for (const spec of indexes) {
       const { key, ...options } = spec;
-      await col.createIndex(key, options);
+      try {
+        await col.createIndex(key, options);
+      } catch (idxErr) {
+        if (idxErr.code === 86 || idxErr.codeName === 'IndexKeySpecsConflict') {
+          const indexName = Object.keys(key).map((k) => `${k}_${key[k]}`).join('_');
+          try {
+            await col.dropIndex(indexName);
+            await col.createIndex(key, options);
+          } catch (dropErr) {
+            logger.warn(`Could not recreate index ${indexName} on ${collection}: ${dropErr.message}`);
+          }
+        }
+      }
     }
   }
 }

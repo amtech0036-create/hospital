@@ -49,10 +49,14 @@ const listTenants = asyncHandler(async (req, res) => {
 
   const enriched = await Promise.all(
     tenants.map(async (t) => {
-      const userCount = await userRepository.count({ tenantId: t.id, status: 'Active' });
+      const activeUserCount = await userRepository.count({ tenantId: t.id, status: 'Active' });
+      const userLimit = LicenseService.getMaxUsersForTier(t.licenseTier || 1);
       return {
         ...t,
-        activeUserCount: userCount
+        userCount: activeUserCount,
+        activeUserCount,
+        userLimit,
+        maxUsers: userLimit
       };
     })
   );
@@ -70,7 +74,8 @@ const getTenant = asyncHandler(async (req, res) => {
   }
 
   const activeUserCount = await userRepository.count({ tenantId: tenant.id, status: 'Active' });
-  return success(res, { message: 'Tenant details loaded.', data: { ...tenant, activeUserCount } });
+  const userLimit = LicenseService.getMaxUsersForTier(tenant.licenseTier || 1);
+  return success(res, { message: 'Tenant details loaded.', data: { ...tenant, userCount: activeUserCount, activeUserCount, userLimit, maxUsers: userLimit } });
 });
 
 const updateTenantLicense = asyncHandler(async (req, res) => {

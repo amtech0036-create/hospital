@@ -32,6 +32,13 @@ const AdvanceRepository = require('./mongo/AdvanceRepository');
 const DeviceRepository = require('./mongo/DeviceRepository');
 const ShiftRepository = require('./mongo/ShiftRepository');
 const BiometricEmployeeRepository = require('./mongo/BiometricEmployeeRepository');
+const PatientRepository = require('./mongo/PatientRepository');
+const DiagnosticTestRepository = require('./mongo/DiagnosticTestRepository');
+const DiagnosticOrderRepository = require('./mongo/DiagnosticOrderRepository');
+const DiagnosticResultRepository = require('./mongo/DiagnosticResultRepository');
+const DoctorCommissionRepository = require('./mongo/DoctorCommissionRepository');
+const ClinicalAuditLogRepository = require('./mongo/ClinicalAuditLogRepository');
+const DoctorRepository = require('./mongo/DoctorRepository');
 
 module.exports = {
   tenantRepository: new TenantRepository(),
@@ -67,5 +74,21 @@ module.exports = {
   advanceRepository: new AdvanceRepository(),
   deviceRepository: new DeviceRepository(),
   shiftRepository: new ShiftRepository(),
-  biometricEmployeeRepository: new BiometricEmployeeRepository()
+  biometricEmployeeRepository: new BiometricEmployeeRepository(),
+  patientRepository: new PatientRepository(),
+  diagnosticTestRepository: new DiagnosticTestRepository(),
+  diagnosticOrderRepository: new DiagnosticOrderRepository(),
+  diagnosticResultRepository: new DiagnosticResultRepository(),
+  doctorCommissionRepository: new DoctorCommissionRepository(),
+  clinicalAuditLogRepository: new ClinicalAuditLogRepository(),
+  doctorRepository: new DoctorRepository(),
+  doctorScheduleRepository: require('./mongo/DoctorScheduleRepository'),
+  appointmentRepository: require('./mongo/AppointmentRepository'),
+  prescriptionRepository: require('./mongo/PrescriptionRepository'),
+  medicalRecordRepository: require('./mongo/MedicalRecordRepository'),
+  bedMasterRepository: require('./mongo/BedMasterRepository'),
+  admissionRepository: require('./mongo/AdmissionRepository'),
+  patientLedgerRepository: require('./mongo/PatientLedgerRepository'),
+  storeRequisitionRepository: require('./mongo/StoreRequisitionRepository'),
+  bloodUnitRepository: require('./mongo/BloodUnitRepository')
 };

@@ -1,7 +1,35 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/health', (req, res) => res.json({ success: true, message: 'API is healthy.' }));
+const env = require('../config/env');
+const { getDb } = require('../config/mongoClient');
+
+router.get('/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  let dbName = env.MONGODB_DB_NAME || 'Hospital_ERP_DB';
+  try {
+    const db = await getDb();
+    if (db) dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'error';
+  }
+
+  const memory = process.memoryUsage();
+  return res.json({
+    success: true,
+    message: 'Hospital ERP API is healthy.',
+    database: {
+      name: dbName,
+      status: dbStatus
+    },
+    system: {
+      uptimeSeconds: Math.floor(process.uptime()),
+      memoryHeapMB: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
+      memoryRssMB: Math.round((memory.rss / 1024 / 1024) * 100) / 100
+    },
+    timestamp: new Date().toISOString()
+  });
+});
 
 router.use('/auth', require('./auth.routes'));
 router.use('/dashboard', require('./dashboard.routes'));
@@ -28,6 +56,16 @@ router.use('/shifts', require('./shift.routes'));
 router.use('/biometrics', require('./biometric.routes'));
 router.use('/settings', require('./settings.routes'));
 router.use('/reports', require('./report.routes'));
+router.use('/diagnostics', require('./diagnostic.routes'));
+router.use('/doctors', require('./doctor.routes'));
+router.use('/patients', require('./patient.routes'));
+router.use('/opd', require('./opd.routes'));
+router.use('/emr', require('./emr.routes'));
+router.use('/pharmacy', require('./pharmacy.routes'));
+router.use('/ipd', require('./ipd.routes'));
+router.use('/billing', require('./unifiedBilling.routes'));
+router.use('/store', require('./hospitalStore.routes'));
+router.use('/blood-bank', require('./bloodBank.routes'));
 router.use('/super-admin', require('./superAdmin.routes'));
 
 module.exports = router;

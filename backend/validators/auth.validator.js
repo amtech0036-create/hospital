@@ -1,6 +1,6 @@
 const { body } = require('express-validator');
 
-const ROLES = ['Admin', 'Manager', 'Sales', 'Sales User', 'Accountant', 'HR', 'Demo'];
+const ROLES = ['Admin', 'Manager', 'Sales', 'Sales User', 'Accountant', 'HR', 'Demo', 'Receptionist', 'Phlebotomist', 'Lab_Technician', 'Radiologist', 'Pathologist', 'Doctor'];
 
 const loginRules = [
   body('email').isEmail().withMessage('A valid email is required.').normalizeEmail(),

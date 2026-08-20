@@ -25,8 +25,8 @@ const env = {
   SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL || '',
   SUPER_ADMIN_SECRET: process.env.SUPER_ADMIN_SECRET || '',
 
-  MONGODB_URI: process.env.MONGODB_URI || '',
-  MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || 'inventory_erp',
+  MONGODB_URI: (process.env.MONGODB_URI || '').trim(),
+  MONGODB_DB_NAME: process.env.DB_NAME || process.env.MONGODB_DB_NAME || 'Hospital_ERP_DB',
 
   isProduction() {
     return this.NODE_ENV === 'production';

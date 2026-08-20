@@ -7,7 +7,39 @@
 const SIDEBAR_SECTIONS = [
   { title: null, links: [{ label: 'Dashboard', href: '/dashboard.html', icon: 'bi-speedometer2' }] },
   {
-    title: 'Inventory',
+    title: 'Clinical Operations',
+    links: [
+      { label: 'OPD Queue', href: '/opd.html' },
+      { label: 'Doctor Prescription', href: '/prescription.html' },
+      { label: 'EMR Timeline', href: '/emr.html' },
+      { label: 'IPD Ward & Beds', href: '/ipd-beds.html' }
+    ]
+  },
+  {
+    title: 'Hospital Pharmacy',
+    links: [
+      { label: 'Pharmacy POS (FEFO)', href: '/pharmacy-pos.html' }
+    ]
+  },
+  {
+    title: 'Diagnostics (HIS/LIS)',
+    links: [
+      { label: 'Diagnostic Billing', href: '/diagnostics-billing.html' },
+      { label: 'Universal Scanner', href: '/diagnostics-scan.html' },
+      { label: 'Worklist & Approval', href: '/diagnostics-approval.html' },
+      { label: 'Analytics & Commissions', href: '/diagnostics-analytics.html' }
+    ]
+  },
+  {
+    title: 'Clinical Masters',
+    links: [
+      { label: 'Patient Master', href: '/patients.html' },
+      { label: 'Doctor Master', href: '/doctors.html' },
+      { label: 'Test Catalog Master', href: '/diagnostic-tests.html' }
+    ]
+  },
+  {
+    title: 'Inventory & Store',
     links: [
       { label: 'Products', href: '/products.html' },
       { label: 'Categories', href: '/categories.html' },
@@ -53,7 +85,7 @@ function getPermittedSections() {
     return sections.filter((s) => s.title !== 'Super Admin');
   }
 
-  // Admin & Manager have access to sections
+  // Admin & Manager have full access
   if (lowerRole === 'admin' || lowerRole === 'superadmin' || lowerRole === 'manager') {
     return filterSuperAdmin(SIDEBAR_SECTIONS);
   }
@@ -61,6 +93,28 @@ function getPermittedSections() {
   const sections = SIDEBAR_SECTIONS.map((section) => {
     if (section.title === 'Super Admin' && (!isDefaultTenant || (lowerRole !== 'admin' && lowerRole !== 'superadmin'))) {
       return null;
+    }
+
+    if (lowerRole === 'receptionist') {
+      if (section.title && !['Diagnostics (HIS/LIS)', 'Clinical Masters', 'Customers'].includes(section.title)) return null;
+      if (section.title === 'Diagnostics (HIS/LIS)') {
+        return {
+          ...section,
+          links: section.links.filter((l) => l.href.includes('billing') || l.href.includes('analytics'))
+        };
+      }
+    } else if (lowerRole === 'phlebotomist' || lowerRole === 'lab_technician') {
+      if (section.title && section.title !== 'Diagnostics (HIS/LIS)') return null;
+      return {
+        ...section,
+        links: section.links.filter((l) => l.href.includes('scan'))
+      };
+    } else if (lowerRole === 'pathologist' || lowerRole === 'radiologist' || lowerRole === 'doctor') {
+      if (section.title && !['Diagnostics (HIS/LIS)', 'Clinical Masters'].includes(section.title)) return null;
+      return {
+        ...section,
+        links: section.links.filter((l) => l.href.includes('approval') || l.href.includes('analytics') || l.href.includes('scan'))
+      };
     }
 
     if (lowerRole === 'demo') {

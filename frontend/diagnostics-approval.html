@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Worklist, Approval & PDF Report Print — HIS / LIS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+  <style>
+    .signature-box { border: 2px dashed #0d6efd; background-color: #f8f9fa; border-radius: 8px; padding: 15px; }
+    .sig-preview { font-family: 'Brush Script MT', cursive, sans-serif; font-size: 1.8rem; color: #002b49; }
+    @media print {
+      body * { visibility: hidden; }
+      #printablePdfReport, #printablePdfReport * { visibility: visible; }
+      #printablePdfReport { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+    <div id="approvalAlert" class="alert alert-danger d-none"></div>
+
+    <!-- Header & Digital Signature Settings Card -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-patch-check me-2"></i>Doctor / Pathologist Authorization Worklist</h6>
+        <span class="badge bg-light text-primary fw-bold" id="currentDoctorBadge">Verifying Doctor: Pathologist/Radiologist</span>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center g-3">
+          <div class="col-md-8">
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+              <input type="text" id="worklistSearchInput" class="form-control" placeholder="Search pending worklist by Invoice #, UHID, or Patient Name..." />
+              <button type="button" class="btn btn-outline-secondary" id="btnRefreshWorklist"><i class="bi bi-arrow-clockwise me-1"></i>Refresh Queue</button>
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#signatureModal">
+              <i class="bi bi-pen me-1"></i>Configure Digital Signature
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Worklist Queue Table -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Invoice # / UHID</th>
+                <th>Patient Name</th>
+                <th>Dept / Test</th>
+                <th>Result Status</th>
+                <th>Entered By / Date</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="worklistTbody">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  <span class="spinner-border spinner-border-sm text-primary me-2"></span>Loading pending authorization worklist...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Digital Signature Modal -->
+  <div class="modal fade" id="signatureModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-pen me-2"></i>Doctor Digital Signature Stamp</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Signee Full Name & Qualification</label>
+            <input type="text" id="sigNameInput" class="form-control" value="Dr. A. Rahman, MD (Pathology)" />
+          </div>
+          <div class="signature-box text-center mb-2">
+            <div class="small text-muted mb-1">Live Digital Stamp Preview:</div>
+            <div id="sigPreviewText" class="sig-preview">Dr. A. Rahman</div>
+            <div class="small text-secondary mt-1">Hash: <code id="sigHashPreview">SIG-HASH-994812</code></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnSaveSignature" data-bs-dismiss="modal">Save Stamp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF A4 Report Print Modal -->
+  <div class="modal fade" id="pdfPrintModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white py-2">
+          <h5 class="modal-title"><i class="bi bi-file-earmark-pdf me-2"></i>Print-Ready Diagnostic Report (A4 Layout)</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="printablePdfReport">
+          <!-- Dynamic A4 Layout PDF Body rendered here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print PDF Report</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/diagnosticsApproval.js"></script>
+</body>
+</html>

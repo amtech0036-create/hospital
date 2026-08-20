@@ -41,12 +41,17 @@ async function apiRequest(path, { method = 'GET', body = null, auth = true } = {
     fetchMethod = 'POST';
   }
 
+  let formattedBody = undefined;
+  if (body !== null && body !== undefined) {
+    formattedBody = typeof body === 'string' ? body : JSON.stringify(body);
+  }
+
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: fetchMethod,
       headers,
-      body: body ? JSON.stringify(body) : undefined
+      body: formattedBody
     });
   } catch (netErr) {
     // Retrying once if GET request fails (e.g. backend waking up from cold start on Render)
@@ -56,7 +61,7 @@ async function apiRequest(path, { method = 'GET', body = null, auth = true } = {
         response = await fetch(`${API_BASE_URL}${path}`, {
           method,
           headers,
-          body: body ? JSON.stringify(body) : undefined
+          body: formattedBody
         });
       } catch (retryErr) {
         const error = new Error('Unable to connect to the backend server. The server may be waking up or offline. Please retry in a few seconds.');

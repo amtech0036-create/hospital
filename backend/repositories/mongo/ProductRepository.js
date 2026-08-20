@@ -5,6 +5,7 @@ const COLUMNS = [
   'id', 'tenantId', 'sku', 'name', 'categoryId', 'brandId', 'unitId', 'description',
   'purchasePrice', 'pricingMethod', 'markupPercentage', 'sellingPrice',
   'minimumStock', 'openingStock', 'batchNumber', 'expiryDate', 'status',
+  'isMedicine', 'genericName', 'manufacturer', 'dosageForm', 'strength', 'prescriptionRequired', 'batches',
   'priceEffectiveDate', 'createdAt', 'updatedAt'
 ];
 

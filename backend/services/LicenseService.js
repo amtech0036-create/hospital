@@ -2,10 +2,15 @@ const crypto = require('crypto');
 const env = require('../config/env');
 
 const TIER_LIMITS = {
-  1: 15,
+  1: 25,
   2: 50,
-  3: 100,
-  4: 500
+  3: 150,
+  4: 500,
+  starter: 25,
+  clinic: 25,
+  diagnostic: 50,
+  hospital_standard: 150,
+  enterprise: 500
 };
 
 class LicenseService {
@@ -14,6 +19,9 @@ class LicenseService {
   }
 
   getMaxUsersForTier(tier) {
+    if (typeof tier === 'string' && TIER_LIMITS[tier.toLowerCase()]) {
+      return TIER_LIMITS[tier.toLowerCase()];
+    }
     const num = parseInt(tier, 10);
     return TIER_LIMITS[num] || TIER_LIMITS[1];
   }
