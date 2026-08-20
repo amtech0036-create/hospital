@@ -127,6 +127,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
       admitForm.reset();
+      loadBedMatrix();
+    } catch (err) {
+      showAlert('Admission failed: ' + err.message);
+    }
+  });
+
   // Add New Bed Form Submit
   const addBedForm = document.getElementById('addBedForm');
   if (addBedForm) {
@@ -153,10 +159,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
-    } catch (err) {
-      showAlert('Admission failed: ' + err.message);
-    }
-  });
 
   await loadBedMatrix();
 });
