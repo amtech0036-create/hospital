@@ -18,23 +18,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     opdAlert.textContent = msg;
   }
 
+  let allDoctorsList = [];
+
+  function populateScheduleDoctorSelect(docs) {
+    const select = document.getElementById('scheduleDoctorSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Select Doctor --</option>';
+    docs.forEach((doc) => {
+      const opt = `<option value="${doc.id}">Dr. ${doc.name} (${doc.specialization || doc.department || 'General'}) - Fee: ${doc.fee || 800} BDT</option>`;
+      select.insertAdjacentHTML('beforeend', opt);
+    });
+  }
+
+  // Doctor Search input event listener
+  const scheduleDoctorSearch = document.getElementById('scheduleDoctorSearch');
+  if (scheduleDoctorSearch) {
+    scheduleDoctorSearch.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allDoctorsList.filter(
+        (d) =>
+          (d.name || '').toLowerCase().includes(q) ||
+          (d.specialization || '').toLowerCase().includes(q) ||
+          (d.department || '').toLowerCase().includes(q)
+      );
+      populateScheduleDoctorSelect(filtered);
+    });
+  }
+
   // Load Doctors & Patients
   async function loadInitialData() {
     try {
       const docsRes = await apiRequest('/doctors');
       const docs = docsRes.data || docsRes;
-      const schedDoctorSelect = document.getElementById('schedDoctorSelect');
+      allDoctorsList = docs;
       doctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>';
       modalDoctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>';
-      if (schedDoctorSelect) schedDoctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>';
 
       docs.forEach((doc) => {
         doctorsMap[doc.id] = doc;
         const opt = `<option value="${doc.id}">Dr. ${doc.name} (${doc.specialization || doc.department || 'General'}) - Fee: ${doc.fee || 500} BDT</option>`;
         doctorSelect.insertAdjacentHTML('beforeend', opt);
         modalDoctorSelect.insertAdjacentHTML('beforeend', opt);
-        if (schedDoctorSelect) schedDoctorSelect.insertAdjacentHTML('beforeend', opt);
       });
+
+      populateScheduleDoctorSelect(docs);
 
       const patRes = await apiRequest('/patients');
       const pats = patRes.data || patRes;
@@ -218,22 +245,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Open Add Doctor Schedule Modal
   window.openScheduleModal = async function () {
     try {
+      const searchInput = document.getElementById('scheduleDoctorSearch');
+      if (searchInput) searchInput.value = '';
       const res = await apiRequest('/doctors');
       const docs = res.data || res;
-      const select = document.getElementById('scheduleDoctorSelect');
-      if (select) {
-        select.innerHTML = '<option value="">-- Select Doctor --</option>';
-        docs.forEach((d) => {
-          select.insertAdjacentHTML('beforeend', `<option value="${d.id}">Dr. ${d.name} (${d.specialization || d.department || 'General'}) - Fee: ${d.fee || 800} BDT</option>`);
-        });
-      }
+      allDoctorsList = docs;
+      populateScheduleDoctorSelect(docs);
       const modalEl = document.getElementById('addScheduleModal');
       if (modalEl) {
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
       }
     } catch (err) {
-      showAlert('Failed to load doctors: ' + err.message);
+      showAlert('Failed to load doctors from Doctor Master: ' + err.message);
     }
   };
 
