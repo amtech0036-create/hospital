@@ -127,7 +127,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
       admitForm.reset();
-      loadBedMatrix();
+  // Add New Bed Form Submit
+  const addBedForm = document.getElementById('addBedForm');
+  if (addBedForm) {
+    addBedForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const bedNumber = document.getElementById('newBedNumber').value.trim();
+      const wardType = document.getElementById('newWardType').value;
+      const dailyCharge = Number(document.getElementById('newDailyCharge').value) || 1000;
+      const floor = document.getElementById('newFloor').value.trim();
+
+      try {
+        await apiRequest('/ipd/beds', {
+          method: 'POST',
+          body: { bedNumber, wardType, dailyCharge, floor, status: 'available' }
+        });
+        const modalEl = document.getElementById('addBedModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        addBedForm.reset();
+        showAlert(`Bed ${bedNumber} created successfully!`, false);
+        loadBedMatrix();
+      } catch (err) {
+        showAlert('Failed to create bed: ' + err.message);
+      }
+    });
+  }
     } catch (err) {
       showAlert('Admission failed: ' + err.message);
     }
