@@ -144,8 +144,14 @@ const getShiftSummary = asyncHandler(async (req, res) => {
   return success(res, { message: 'Shift closing collection report generated.', data });
 });
 
+const getOrders = asyncHandler(async (req, res) => {
+  const orders = await DiagnosticService.getOrders(req.query);
+  return success(res, { message: 'Diagnostic invoices loaded successfully.', data: orders });
+});
+
 module.exports = {
   createOrder,
+  getOrders,
   scanBarcode,
   sampleCollect,
   saveResults,

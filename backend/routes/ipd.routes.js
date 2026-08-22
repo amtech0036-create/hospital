@@ -10,6 +10,7 @@ router.use(authenticate);
 router.get('/beds/matrix', controller.getBedMatrix);
 router.post('/beds', authorize('Admin', 'Manager'), controller.createBed);
 router.get('/beds', controller.listBeds);
+router.patch('/beds/:id/status', authorize('Admin', 'Manager', 'Nurse', 'Receptionist', 'Doctor'), controller.updateBedStatus);
 
 // Admissions & Discharges
 router.post('/admissions', authorize('Receptionist', 'Nurse', 'Admin', 'Manager'), controller.admitPatient);

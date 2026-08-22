@@ -656,6 +656,54 @@ class DiagnosticService {
       isFullyAuthorized: results.length > 0 && results.every((r) => r.status === 'authorized' || r.status === 'approved')
     };
   }
+
+  /**
+   * GET /api/diagnostics/orders
+   * Filter historical diagnostic invoices by UHID, search term, and date range.
+   */
+  async getOrders({ search, uhid, startDate, endDate } = {}) {
+    let query = {};
+    if (uhid) {
+      query.uhid = uhid;
+    }
+    const allOrders = await diagnosticOrderRepository.findAll(query);
+
+    let filtered = allOrders;
+
+    if (uhid && !query.uhid) {
+      const u = uhid.toLowerCase().trim();
+      filtered = filtered.filter(
+        (o) => (o.uhid || '').toLowerCase().includes(u) || (o.patientSnapshot?.uhid || '').toLowerCase().includes(u)
+      );
+    }
+
+    if (search) {
+      const q = search.toLowerCase().trim();
+      filtered = filtered.filter(
+        (o) =>
+          (o.invoiceNumber || '').toLowerCase().includes(q) ||
+          (o.orderBarcode || '').toLowerCase().includes(q) ||
+          (o.uhid || '').toLowerCase().includes(q) ||
+          (o.patientSnapshot?.fullName || o.patientSnapshot?.name || '').toLowerCase().includes(q) ||
+          (o.patientSnapshot?.phone || '').toLowerCase().includes(q)
+      );
+    }
+
+    if (startDate) {
+      const start = new Date(startDate).setHours(0, 0, 0, 0);
+      filtered = filtered.filter((o) => new Date(o.createdAt).getTime() >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate).setHours(23, 59, 59, 999);
+      filtered = filtered.filter((o) => new Date(o.createdAt).getTime() <= end);
+    }
+
+    // Sort descending by creation date
+    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return filtered;
+  }
 }
 
 module.exports = new DiagnosticService();

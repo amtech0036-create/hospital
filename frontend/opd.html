@@ -40,9 +40,7 @@
         <div class="card shadow-sm border-0 h-100">
           <div class="card-body">
             <label class="form-label fw-bold"><i class="bi bi-person-badge text-primary me-1"></i>Select OPD Doctor</label>
-            <select id="doctorSelect" class="form-select form-select-sm mb-2">
-              <option value="">-- Select Doctor --</option>
-            </select>
+            <div id="doctorSearchMount" class="mb-2"></div>
             <div id="doctorScheduleInfo" class="small text-muted p-2 bg-light rounded d-none">
               <span id="scheduleText">Schedule info...</span>
             </div>
@@ -116,15 +114,21 @@
           <form id="tokenForm">
             <div class="mb-3">
               <label class="form-label fw-bold">OPD Doctor *</label>
-              <select id="modalDoctorSelect" class="form-select form-select-sm" required>
-                <option value="">-- Select Doctor --</option>
-              </select>
+              <div id="modalDoctorSearchMount"></div>
             </div>
             <div class="mb-3">
               <label class="form-label fw-bold">Select Existing Patient (UHID) *</label>
-              <select id="modalPatientSelect" class="form-select form-select-sm" required>
-                <option value="">-- Select Patient --</option>
-              </select>
+              <div id="modalPatientSearchMount"></div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-bold">Appointment Date *</label>
+                <input type="date" id="modalAppointmentDate" class="form-control form-control-sm" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label">Time Slot</label>
+                <input type="time" id="modalAppointmentTime" class="form-control form-control-sm" />
+              </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Consultation Fee (BDT)</label>
@@ -252,6 +256,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/sidebar.js"></script>
+  <script src="js/searchSelect.js"></script>
   <script src="js/opd.js"></script>
 </body>
 </html>

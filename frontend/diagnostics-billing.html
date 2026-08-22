@@ -24,6 +24,27 @@
     <div id="erpTopbar"></div>
     <div id="billingAlert" class="alert alert-danger d-none"></div>
 
+    <!-- Doctor Prescription Auto-Load Bar -->
+    <div class="card shadow-sm border-0 mb-3 bg-light">
+      <div class="card-body py-2">
+        <div class="row align-items-center g-2">
+          <div class="col-md-4">
+            <h6 class="mb-0 text-primary fw-bold">
+              <i class="bi bi-file-earmark-medical-fill me-2"></i>Auto-Load Doctor Prescription Tests
+            </h6>
+          </div>
+          <div class="col-md-8">
+            <div class="input-group input-group-sm">
+              <input type="text" id="rxLookupInput" class="form-control" placeholder="Enter Prescription Number (e.g. RX-20260822-0001)..." />
+              <button id="loadRxBtn" class="btn btn-primary" type="button">
+                <i class="bi bi-download me-1"></i>Load Prescription
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-3">
       <!-- Left Column: Patient Registration / UHID Lookup -->
       <div class="col-lg-4">
@@ -170,6 +191,64 @@
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Previous Invoices History Section -->
+    <div class="card shadow-sm border-0 mt-4 mb-4">
+      <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-clock-history me-2 text-info"></i>Previous Diagnostic Invoices History</h6>
+        <button class="btn btn-sm btn-outline-light" id="btnRefreshInvoices" type="button">
+          <i class="bi bi-arrow-repeat me-1"></i>Refresh History
+        </button>
+      </div>
+      <div class="card-body">
+        <!-- Filters: Search by UHID/Name/Invoice#, Date Range -->
+        <div class="row g-2 mb-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label small fw-bold mb-1">Search Patient UHID / Name / Invoice #</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+              <input type="text" id="historySearchInput" class="form-control" placeholder="Type UHID, Name, Invoice..." />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">From Date</label>
+            <input type="date" id="historyStartDate" class="form-control form-control-sm" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">To Date</label>
+            <input type="date" id="historyEndDate" class="form-control form-control-sm" />
+          </div>
+          <div class="col-md-2">
+            <button id="btnFilterHistory" type="button" class="btn btn-primary btn-sm w-100">
+              <i class="bi bi-funnel me-1"></i>Filter Invoices
+            </button>
+          </div>
+        </div>
+
+        <!-- Previous Invoices Table -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date & Time</th>
+                <th>Invoice #</th>
+                <th>Patient Details (UHID)</th>
+                <th>Ordered Tests</th>
+                <th class="text-end">Net Amount</th>
+                <th class="text-end">Paid</th>
+                <th class="text-end">Due</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyInvoicesTbody">
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">Loading previous invoices...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

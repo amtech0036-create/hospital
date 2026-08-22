@@ -37,9 +37,16 @@ const listSchedules = asyncHandler(async (req, res) => {
   return success(res, { message: 'Doctor schedules loaded.', data: schedules });
 });
 
+const getAppointment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const appointment = await OpdService.getAppointment(id);
+  return success(res, { message: 'OPD Appointment loaded.', data: appointment });
+});
+
 module.exports = {
   createAppointment,
   getDoctorQueue,
+  getAppointment,
   updateVitals,
   updateStatus,
   createSchedule,

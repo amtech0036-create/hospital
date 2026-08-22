@@ -27,6 +27,25 @@
           </button>
         </div>
       </div>
+    <!-- Auto-Load OPD Appointment Queue Bar -->
+    <div class="card shadow-sm border-0 mb-3 bg-light">
+      <div class="card-body py-2">
+        <div class="row align-items-center g-2">
+          <div class="col-md-4">
+            <h6 class="mb-0 text-primary fw-bold">
+              <i class="bi bi-ticket-perforated-fill me-2"></i>Load OPD Appointment / Token Queue ID
+            </h6>
+          </div>
+          <div class="col-md-8">
+            <div class="input-group input-group-sm">
+              <input type="text" id="opdAppointmentLookupInput" class="form-control" placeholder="Enter Appointment Number (e.g. APT-20260822-0001) or Token ID..." />
+              <button id="loadOpdAppointmentBtn" class="btn btn-primary" type="button">
+                <i class="bi bi-download me-1"></i>Load Appointment & Start Consultation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <form id="rxForm">
@@ -36,15 +55,11 @@
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label fw-bold">Select Patient (UHID) *</label>
-              <select id="rxPatientSelect" class="form-select form-select-sm" required>
-                <option value="">-- Select Patient --</option>
-              </select>
+              <div id="rxPatientSearchMount"></div>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-bold">Attending Doctor *</label>
-              <select id="rxDoctorSelect" class="form-select form-select-sm" required>
-                <option value="">-- Select Doctor --</option>
-              </select>
+              <div id="rxDoctorSearchMount"></div>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-bold">Clinical Diagnosis *</label>
@@ -116,10 +131,39 @@
     </form>
   </div>
 
+  <!-- Prescription Finalized Success Modal -->
+  <div class="modal fade" id="prescriptionSuccessModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Prescription Finalized</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center py-4">
+          <i class="bi bi-file-earmark-check text-success display-3 mb-3"></i>
+          <h5 class="fw-bold mb-1" id="modalRxNumber">RX-2026-0001</h5>
+          <p class="text-muted mb-4">Prescription has been generated and saved to patient EMR timeline.</p>
+          <div class="d-grid gap-2 col-10 mx-auto">
+            <button id="printRxModalBtn" type="button" class="btn btn-primary btn-lg">
+              <i class="bi bi-printer-fill me-2"></i>Print Prescription Pad
+            </button>
+            <button id="viewEmrModalBtn" type="button" class="btn btn-outline-secondary">
+              <i class="bi bi-journal-text me-2"></i>View Patient EMR Timeline
+            </button>
+            <button type="button" class="btn btn-link text-decoration-none btn-sm text-muted" data-bs-dismiss="modal" onclick="location.reload()">
+              + Create New Prescription
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/sidebar.js"></script>
+  <script src="js/searchSelect.js"></script>
   <script src="js/prescription.js"></script>
 </body>
 </html>

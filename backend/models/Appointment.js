@@ -13,6 +13,7 @@ const Appointment = {
     'doctorId',
     'doctorName',
     'date', // '2026-08-20'
+    'time', // '10:30'
     'tokenNumber', // 1, 2, 3...
     'status', // 'scheduled', 'in_queue', 'in_consultation', 'completed', 'cancelled'
     'consultationFee',

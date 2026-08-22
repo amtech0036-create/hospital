@@ -18,6 +18,12 @@ router.post(
   controller.createOrder
 );
 
+router.get(
+  '/orders',
+  authorize('Admin', 'Manager', 'Receptionist', 'Doctor', 'Accountant'),
+  controller.getOrders
+);
+
 // 2. Unified Barcode Lookup (Invoice Barcode or Specimen Barcode)
 router.get(
   '/scan/:barcode',

@@ -28,10 +28,18 @@ const dischargePatient = asyncHandler(async (req, res) => {
   return success(res, { message: 'IPD Patient discharged successfully.', data: dischargeData });
 });
 
+const updateBedStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const updated = await IpdService.updateBedStatus(id, status);
+  return success(res, { message: `Bed status updated to ${status}.`, data: updated });
+});
+
 module.exports = {
   getBedMatrix,
   createBed,
   listBeds,
+  updateBedStatus,
   admitPatient,
   dischargePatient
 };

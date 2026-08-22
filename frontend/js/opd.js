@@ -1,13 +1,14 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const doctorSelect = document.getElementById('doctorSelect');
-  const modalDoctorSelect = document.getElementById('modalDoctorSelect');
-  const modalPatientSelect = document.getElementById('modalPatientSelect');
   const modalDoctorFee = document.getElementById('modalDoctorFee');
   const opdQueueTableBody = document.getElementById('opdQueueTableBody');
   const refreshQueueBtn = document.getElementById('refreshQueueBtn');
   const tokenForm = document.getElementById('tokenForm');
   const vitalsForm = document.getElementById('vitalsForm');
   const opdAlert = document.getElementById('opdAlert');
+
+  let mainDoctorSearch = null;
+  let modalDoctorSearch = null;
+  let modalPatientSearch = null;
 
   let doctorsMap = {};
   let patientsMap = {};
@@ -51,27 +52,75 @@ document.addEventListener('DOMContentLoaded', async () => {
       const docsRes = await apiRequest('/doctors');
       const docs = docsRes.data || docsRes;
       allDoctorsList = docs;
-      doctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>';
-      modalDoctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>';
 
       docs.forEach((doc) => {
         doctorsMap[doc.id] = doc;
-        const opt = `<option value="${doc.id}">Dr. ${doc.name} (${doc.specialization || doc.department || 'General'}) - Fee: ${doc.fee || 500} BDT</option>`;
-        doctorSelect.insertAdjacentHTML('beforeend', opt);
-        modalDoctorSelect.insertAdjacentHTML('beforeend', opt);
       });
+
+      const mainDocMount = document.getElementById('doctorSearchMount');
+      if (mainDocMount && typeof mountSearchSelect === 'function') {
+        if (mainDoctorSearch) {
+          mainDoctorSearch.setItems(docs);
+        } else {
+          mainDoctorSearch = mountSearchSelect(mainDocMount, {
+            items: docs,
+            placeholder: 'Search doctor by name or specialty...',
+            size: 'sm',
+            getLabel: (d) => (d.name.startsWith('Dr.') ? d.name : `Dr. ${d.name}`),
+            getSubLabel: (d) => `${d.specialization || d.department || 'General'} · Fee: ${d.fee || 500} BDT`,
+            getValue: (d) => d.id,
+            onSelect: () => {
+              loadQueue();
+            }
+          });
+        }
+      }
 
       populateScheduleDoctorSelect(docs);
 
+      const docMount = document.getElementById('modalDoctorSearchMount');
+      if (docMount && typeof mountSearchSelect === 'function') {
+        if (modalDoctorSearch) {
+          modalDoctorSearch.setItems(docs);
+        } else {
+          modalDoctorSearch = mountSearchSelect(docMount, {
+            items: docs,
+            placeholder: 'Search doctor by name, specialty, department...',
+            size: 'sm',
+            required: true,
+            getLabel: (d) => (d.name.startsWith('Dr.') ? d.name : `Dr. ${d.name}`),
+            getSubLabel: (d) => `${d.specialization || d.department || 'General'} · Fee: ${d.fee || 500} BDT`,
+            getValue: (d) => d.id,
+            onSelect: (d) => {
+              modalDoctorFee.value = d ? (d.fee || 500) : 500;
+            }
+          });
+        }
+      }
+
       const patRes = await apiRequest('/patients');
       const pats = patRes.data || patRes;
-      modalPatientSelect.innerHTML = '<option value="">-- Select Patient --</option>';
 
       pats.forEach((p) => {
         patientsMap[p.id] = p;
-        const opt = `<option value="${p.id}">${p.fullName || p.name} (${p.uhid || p.id}) - Mobile: ${p.phone || 'N/A'}</option>`;
-        modalPatientSelect.insertAdjacentHTML('beforeend', opt);
       });
+
+      const patMount = document.getElementById('modalPatientSearchMount');
+      if (patMount && typeof mountSearchSelect === 'function') {
+        if (modalPatientSearch) {
+          modalPatientSearch.setItems(pats);
+        } else {
+          modalPatientSearch = mountSearchSelect(patMount, {
+            items: pats,
+            placeholder: 'Search patient by name, UHID, or phone...',
+            size: 'sm',
+            required: true,
+            getLabel: (p) => `${p.fullName || p.name} (${p.uhid || p.id})`,
+            getSubLabel: (p) => `Mobile: ${p.phone || 'N/A'}`,
+            getValue: (p) => p.id
+          });
+        }
+      }
     } catch (err) {
       console.error('Failed to load initial OPD data:', err);
     }
@@ -79,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Fetch Doctor Queue
   async function loadQueue() {
-    const doctorId = doctorSelect.value;
+    const doctorId = mainDoctorSearch ? mainDoctorSearch.getValue() : '';
     if (!doctorId) {
       opdQueueTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Select a doctor to view live waiting queue.</td></tr>';
       document.getElementById('statTotal').textContent = '0';
@@ -116,7 +165,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const row = `
           <tr>
             <td class="ps-3"><span class="badge bg-dark fs-6">#${apt.tokenNumber}</span></td>
-            <td><small class="fw-bold text-primary">${apt.appointmentNumber}</small></td>
+            <td>
+              <small class="fw-bold text-primary">${apt.appointmentNumber}</small>
+              <small class="text-muted d-block">${apt.date || ''}${apt.time ? ` @ ${apt.time}` : ''}</small>
+            </td>
             <td>
               <div class="fw-bold">${apt.patientName}</div>
               <small class="text-muted">UHID: ${apt.uhid} | Phone: ${apt.patientPhone || 'N/A'}</small>
@@ -125,6 +177,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td class="fw-bold">${apt.consultationFee || 500} BDT</td>
             <td>${statusBadge}</td>
             <td class="text-end pe-3">
+              <a href="prescription.html?appointmentId=${apt.id}" class="btn btn-sm btn-outline-primary me-1">
+                <i class="bi bi-file-earmark-medical me-1"></i>Prescribe
+              </a>
               <button class="btn btn-sm btn-outline-danger me-1 capture-vitals-btn" data-id="${apt.id}" data-vitals='${JSON.stringify(vitals)}'>
                 <i class="bi bi-heart-pulse"></i> Vitals
               </button>
@@ -178,18 +233,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Modal Doctor Select Fee Sync
-  modalDoctorSelect.addEventListener('change', () => {
-    const docId = modalDoctorSelect.value;
-    const doc = doctorsMap[docId];
-    modalDoctorFee.value = doc ? (doc.fee || 500) : 500;
-  });
+  // Pre-select active doctor and default date when modal opens
+  const tokenModalEl = document.getElementById('tokenModal');
+  if (tokenModalEl) {
+    tokenModalEl.addEventListener('show.bs.modal', () => {
+      const activeDocId = mainDoctorSearch ? mainDoctorSearch.getValue() : '';
+      if (activeDocId && modalDoctorSearch) {
+        modalDoctorSearch.setValue(activeDocId);
+      }
+      const dateInput = document.getElementById('modalAppointmentDate');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().slice(0, 10);
+      }
+    });
+  }
 
   // Issue Token Form
   tokenForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const doctorId = modalDoctorSelect.value;
-    const patientId = modalPatientSelect.value;
+    const doctorId = modalDoctorSearch ? modalDoctorSearch.getValue() : '';
+    const patientId = modalPatientSearch ? modalPatientSearch.getValue() : '';
+    const date = document.getElementById('modalAppointmentDate').value;
+    const time = document.getElementById('modalAppointmentTime').value;
     const notes = document.getElementById('modalNotes').value;
 
     if (!doctorId || !patientId) {
@@ -200,17 +265,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await apiRequest('/opd/appointments', {
         method: 'POST',
-        body: JSON.stringify({ doctorId, patientId, notes })
+        body: JSON.stringify({ doctorId, patientId, date, time, notes })
       });
       const modalEl = document.getElementById('tokenModal');
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
       tokenForm.reset();
-      if (doctorSelect.value === doctorId) loadQueue();
-      else {
-        doctorSelect.value = doctorId;
-        loadQueue();
+      modalDoctorSearch?.clear();
+      modalPatientSearch?.clear();
+      modalDoctorFee.value = '';
+      if (mainDoctorSearch) {
+        mainDoctorSearch.setValue(doctorId);
       }
+      loadQueue();
     } catch (err) {
       showAlert('Failed to issue token: ' + err.message);
     }
@@ -295,7 +362,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  doctorSelect.addEventListener('change', loadQueue);
   refreshQueueBtn.addEventListener('click', loadQueue);
 
   await loadInitialData();

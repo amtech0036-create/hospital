@@ -215,6 +215,18 @@ class IpdService {
   async listBeds(query = {}) {
     return bedMasterRepository.findAll(query);
   }
+
+  async updateBedStatus(bedId, status) {
+    const bed = await bedMasterRepository.findById(bedId);
+    if (!bed) {
+      const err = new Error(`Bed not found with ID ${bedId}`);
+      err.status = 404;
+      throw err;
+    }
+    const updated = await bedMasterRepository.update(bedId, { status });
+    logger.info(`Bed ${bed.bedNumber} status updated to ${status}`);
+    return updated;
+  }
 }
 
 module.exports = new IpdService();

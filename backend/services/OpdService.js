@@ -7,7 +7,7 @@ class OpdService {
    * POST /api/opd/appointments
    * Book OPD appointment & generate daily sequential token number.
    */
-  async createAppointment({ patientId, patientData, doctorId, date, notes }) {
+  async createAppointment({ patientId, patientData, doctorId, date, time, notes }) {
     if (!doctorId) {
       const err = new Error('doctorId is required to book an OPD appointment.');
       err.status = 400;
@@ -64,6 +64,7 @@ class OpdService {
       doctorId: doctor.id,
       doctorName: doctor.name,
       date: appointmentDate,
+      time: time || '',
       tokenNumber,
       status: 'scheduled',
       consultationFee: doctor.fee || 500,
@@ -128,6 +129,23 @@ class OpdService {
 
     const updated = await appointmentRepository.update(appointmentId, { status });
     return updated;
+  }
+
+  /**
+   * GET /api/opd/appointments/:id
+   */
+  async getAppointment(id) {
+    let appointment = await appointmentRepository.findById(id);
+    if (!appointment) {
+      appointment = await appointmentRepository.findOne({ appointmentNumber: id }) ||
+                    await appointmentRepository.findOne({ id });
+    }
+    if (!appointment) {
+      const err = new Error(`OPD Appointment not found with ID ${id}`);
+      err.status = 404;
+      throw err;
+    }
+    return appointment;
   }
 
   /**

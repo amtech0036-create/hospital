@@ -259,6 +259,118 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calcDiscount')?.addEventListener('input', updateTally);
   document.getElementById('calcPaid')?.addEventListener('input', updateTally);
 
+  // Load Prescription Tests Handler
+  const rxInput = document.getElementById('rxLookupInput');
+  const loadRxBtn = document.getElementById('loadRxBtn');
+
+  async function loadPrescriptionData() {
+    const rxNo = rxInput?.value.trim();
+    if (!rxNo) {
+      alert('Please enter a Prescription Number (e.g. RX-20260822-0001).');
+      return;
+    }
+
+    try {
+      let rx = null;
+      try {
+        const res = await apiRequest(`/emr/prescriptions/${encodeURIComponent(rxNo)}`);
+        rx = res.data || res;
+      } catch (err) {
+        const fallback = await apiRequest(`/pharmacy/prescriptions/${encodeURIComponent(rxNo)}`);
+        rx = fallback.data || fallback;
+      }
+
+      if (!rx) {
+        alert(`Prescription #${rxNo} not found.`);
+        return;
+      }
+
+      // Auto-populate Patient details
+      if (rx.patientId || rx.uhid) {
+        document.getElementById('patientId').value = rx.patientId || rx.uhid;
+        document.getElementById('uhid').value = rx.uhid || rx.patientId;
+      }
+      if (rx.patientName) {
+        document.getElementById('fullName').value = rx.patientName;
+      }
+      if (rx.patientPhone || rx.phone) {
+        document.getElementById('phone').value = rx.patientPhone || rx.phone;
+      }
+      if (rx.patientGender || rx.gender) {
+        document.getElementById('gender').value = rx.patientGender || rx.gender || 'Male';
+      }
+      if (rx.patientAge) {
+        const ageVal = parseInt(rx.patientAge, 10);
+        if (!isNaN(ageVal)) document.getElementById('ageValue').value = ageVal;
+      }
+      if (rx.doctorName) {
+        document.getElementById('referredDoctor').value = rx.doctorName;
+        if (rx.doctorId) document.getElementById('referredDoctorId').value = rx.doctorId;
+      }
+
+      // Populate diagnostic tests
+      const testsRecommended = rx.testsRecommended || [];
+      if (testsRecommended.length === 0) {
+        alert(`Prescription #${rx.prescriptionNumber} loaded, but no diagnostic investigations were prescribed.`);
+        return;
+      }
+
+      let catalogList = [];
+      try {
+        const catRes = await apiRequest('/diagnostics/tests');
+        catalogList = catRes.data && catRes.data.length > 0 ? catRes.data : defaultCatalog;
+      } catch (e) {
+        catalogList = defaultCatalog;
+      }
+
+      let addedCount = 0;
+      testsRecommended.forEach((recTest) => {
+        const recStr = String(recTest).trim();
+        const matched = catalogList.find(
+          (c) =>
+            c.code === recStr ||
+            c.name.toLowerCase() === recStr.toLowerCase() ||
+            recStr.toLowerCase().includes((c.code || '').toLowerCase()) ||
+            (c.name || '').toLowerCase().includes(recStr.toLowerCase())
+        );
+
+        const itemToAdd = matched
+          ? {
+              testId: matched.code,
+              testCode: matched.code,
+              testName: matched.name,
+              department: matched.department,
+              price: parseFloat(matched.price) || 0
+            }
+          : {
+              testId: recStr,
+              testCode: recStr,
+              testName: recStr,
+              department: 'Pathology',
+              price: 500
+            };
+
+        if (!selectedTests.some((t) => t.testCode === itemToAdd.testCode)) {
+          selectedTests.push(itemToAdd);
+          addedCount++;
+        }
+      });
+
+      renderTable();
+      alert(`Loaded Prescription #${rx.prescriptionNumber}! Added ${addedCount} prescribed diagnostic test(s) to order invoice.`);
+    } catch (err) {
+      alert(`Failed to load prescription: ${err.message}`);
+    }
+  }
+
+  loadRxBtn?.addEventListener('click', loadPrescriptionData);
+  rxInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      loadPrescriptionData();
+    }
+  });
+
   // Submit Order API Connection
   const btnSubmitOrder = document.getElementById('btnSubmitOrder');
   btnSubmitOrder?.addEventListener('click', async () => {
@@ -304,6 +416,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const printModal = new bootstrap.Modal(document.getElementById('printModal'));
       printModal.show();
+
+      // Refresh Previous Invoices History
+      loadPreviousInvoices();
     } catch (err) {
       alert(err.message || 'Failed to generate diagnostic order.');
     } finally {
@@ -332,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="row mb-3 bg-light p-3 rounded">
           <div class="col-6">
-            <div><strong>Patient Name:</strong> ${patient.fullName}</div>
+            <div><strong>Patient Name:</strong> ${patient.fullName || patient.name}</div>
             <div><strong>UHID:</strong> ${patient.uhid}</div>
             <div><strong>Gender / Age:</strong> ${patient.gender} / ${typeof patient.age === 'object' ? patient.age.value + ' ' + patient.age.unit : patient.age}</div>
           </div>
@@ -386,4 +501,97 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 100);
   }
+
+  // Load & Filter Previous Invoices History
+  const historyTbody = document.getElementById('historyInvoicesTbody');
+  const historySearchInput = document.getElementById('historySearchInput');
+  const historyStartDate = document.getElementById('historyStartDate');
+  const historyEndDate = document.getElementById('historyEndDate');
+  const btnFilterHistory = document.getElementById('btnFilterHistory');
+  const btnRefreshInvoices = document.getElementById('btnRefreshInvoices');
+
+  async function loadPreviousInvoices() {
+    if (!historyTbody) return;
+
+    const search = historySearchInput?.value.trim() || '';
+    const startDate = historyStartDate?.value || '';
+    const endDate = historyEndDate?.value || '';
+
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.set('search', search);
+    if (startDate) queryParams.set('startDate', startDate);
+    if (endDate) queryParams.set('endDate', endDate);
+
+    try {
+      historyTbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading invoices history...</td></tr>';
+      const res = await apiRequest(`/diagnostics/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`);
+      const orders = res.data || [];
+
+      if (orders.length === 0) {
+        historyTbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No diagnostic invoices found matching filters.</td></tr>';
+        return;
+      }
+
+      historyTbody.innerHTML = orders
+        .map((o) => {
+          const dateStr = new Date(o.createdAt).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          const testsBadges = (o.tests || []).map((t) => `<span class="badge bg-secondary me-1 mb-1">${t.testCode || t.testName}</span>`).join('');
+          const fin = o.financials || { totalAmount: 0, netAmount: 0, paidAmount: 0, dueAmount: 0 };
+          const patName = o.patientSnapshot?.fullName || o.patientSnapshot?.name || 'N/A';
+          const patUhid = o.uhid || o.patientSnapshot?.uhid || 'N/A';
+
+          return `
+            <tr>
+              <td><small>${dateStr}</small></td>
+              <td><span class="badge bg-dark">${o.invoiceNumber || o.orderBarcode}</span></td>
+              <td>
+                <div class="fw-bold">${patName}</div>
+                <small class="text-muted">UHID: ${patUhid} | Phone: ${o.patientSnapshot?.phone || 'N/A'}</small>
+              </td>
+              <td><small>${testsBadges}</small></td>
+              <td class="text-end fw-bold">${fin.netAmount.toFixed(2)} BDT</td>
+              <td class="text-end text-success">${fin.paidAmount.toFixed(2)} BDT</td>
+              <td class="text-end text-danger fw-bold">${fin.dueAmount.toFixed(2)} BDT</td>
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-primary btn-print-history" data-barcode="${o.orderBarcode || o.invoiceNumber}">
+                  <i class="bi bi-printer me-1"></i>Print
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      historyTbody.querySelectorAll('.btn-print-history').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const barcode = e.currentTarget.dataset.barcode;
+          try {
+            const scanRes = await apiRequest(`/diagnostics/scan/${encodeURIComponent(barcode)}`);
+            const data = scanRes.data;
+            if (data && data.order) {
+              renderPrintableInvoice(data.order, data.patientInfo || data.order.patientSnapshot || {});
+              const printModal = new bootstrap.Modal(document.getElementById('printModal'));
+              printModal.show();
+            }
+          } catch (err) {
+            alert('Failed to load invoice print details: ' + err.message);
+          }
+        });
+      });
+    } catch (err) {
+      historyTbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">Failed to load history: ${err.message}</td></tr>`;
+    }
+  }
+
+  btnFilterHistory?.addEventListener('click', loadPreviousInvoices);
+  btnRefreshInvoices?.addEventListener('click', loadPreviousInvoices);
+
+  // Auto-load history on page ready
+  loadPreviousInvoices();
 });
