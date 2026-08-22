@@ -16,6 +16,8 @@ function initIcuSearch() {
   new SearchComponent('#icuSearchContainer', {
     endpoint: '/api/icu',
     placeholder: 'Search ICU beds by Bed No, UHID, Patient Name...',
+    displayFormatter: (item) => `${item.bedNumber || 'Bed'} — ${item.patientName || item.uhid || 'Occupant'} (${item.ventilatorStatus || 'ICU'})`,
+    subFormatter: (item) => `BP: ${item.vitalsFlowsheet?.bp || 'N/A'} | Status: ${item.status || 'Monitoring'}`,
     onSelect: (item) => {
       loadIcuRecords(item.uhid || item.bedNumber);
     }
@@ -24,6 +26,7 @@ function initIcuSearch() {
   new SearchComponent('#icuModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for ICU admission...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedIcuPatient = patient;
     }

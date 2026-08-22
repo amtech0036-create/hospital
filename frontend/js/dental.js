@@ -16,6 +16,8 @@ function initDentalSearch() {
   new SearchComponent('#dentalSearchContainer', {
     endpoint: '/api/dental',
     placeholder: 'Search Dental Records by Patient UHID, Name, Tooth...',
+    displayFormatter: (item) => `${item.uhid || 'Dental'} — ${item.patientName || 'Patient'} (${item.toothMatrix || 'Tooth'})`,
+    subFormatter: (item) => `Dentist: ${item.dentistName || 'Dentist'} | Procedure: ${item.procedureDone || 'Care'}`,
     onSelect: (item) => {
       loadDentalRecords(item.uhid);
     }
@@ -24,6 +26,7 @@ function initDentalSearch() {
   new SearchComponent('#dentalModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for dental procedure...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedDentalPatient = patient;
     }

@@ -16,6 +16,8 @@ function initMortuarySearch() {
   new SearchComponent('#mortuarySearchContainer', {
     endpoint: '/api/mortuary',
     placeholder: 'Search Mortuary Records by UHID, Deceased Name, Chamber...',
+    displayFormatter: (item) => `${item.chamberNumber || 'Mortuary'} — ${item.deceasedName} (${item.causeOfDeath || 'Deceased'})`,
+    subFormatter: (item) => `Status: ${item.releaseStatus || 'Stored'} | Kin: ${item.authorizedRecipient || 'Unclaimed'}`,
     onSelect: (item) => {
       loadMortuaryRecords(item.uhid || item.deceasedName);
     }
@@ -24,6 +26,7 @@ function initMortuarySearch() {
   new SearchComponent('#mortuaryModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient record for death registration...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedMortuaryPatient = patient;
       document.getElementById('mortDeceasedName').value = patient.fullName;

@@ -88,6 +88,16 @@ async function apiRequest(path, { method = 'GET', body = null, auth = true } = {
   return json;
 }
 
+async function apiFetch(path, options = {}) {
+  const cleanPath = path.startsWith('/api') ? path.replace(/^\/api/, '') : path;
+  return apiRequest(cleanPath, options);
+}
+
+if (typeof window !== 'undefined') {
+  window.apiRequest = apiRequest;
+  window.apiFetch = apiFetch;
+}
+
 async function downloadBackupJson() {
   const token = getToken();
   const tenantSubdomain = localStorage.getItem('erp_tenant_subdomain') || 'default';

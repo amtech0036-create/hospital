@@ -16,14 +16,17 @@ function initRadiologySearch() {
   new SearchComponent('#radiologySearchContainer', {
     endpoint: '/api/radiology',
     placeholder: 'Search Radiology Worklist by UHID, Patient Name, Procedure...',
+    displayFormatter: (item) => `${item.procedureName || 'Scan'} — ${item.patientName || item.uhid || 'Patient'} (${item.modality || 'Imaging'})`,
+    subFormatter: (item) => `Radiologist: ${item.radiologistName || 'Duty Radiologist'} | Status: ${item.status || 'Scheduled'}`,
     onSelect: (item) => {
-      loadRadiologyOrders(item.uhid);
+      loadRadiologyOrders(item.uhid || item.procedureName);
     }
   });
 
   new SearchComponent('#radiologyModalPatientSearch', {
     endpoint: '/api/patients',
-    placeholder: 'Search patient for imaging order...',
+    placeholder: 'Search patient for radiology imaging scan...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedRadiologyPatient = patient;
     }
@@ -109,4 +112,49 @@ async function saveRadiologyOrder() {
 
 function writeReport(id) {
   alert(`Opening findings & report editor for Radiology order ID ${id}`);
+}
+
+async function loadTests() {
+  if (!selectedRadiologyPatient || !selectedRadiologyPatient.uhid) {
+    alert('Please select a patient first to load diagnostic billed imaging scans.');
+    return;
+  }
+
+  try {
+    const res = await apiFetch(`/api/diagnostics/orders?search=${encodeURIComponent(selectedRadiologyPatient.uhid)}`);
+    const orders = res.data || [];
+    
+    if (!orders.length) {
+      alert(`No diagnostic bill invoices found for patient ${selectedRadiologyPatient.fullName} (${selectedRadiologyPatient.uhid}).`);
+      return;
+    }
+
+    const scans = [];
+    orders.forEach(order => {
+      if (order.items && Array.isArray(order.items)) {
+        order.items.forEach(item => {
+          scans.push({
+            name: item.testName || item.name || item.title || 'Imaging Scan',
+            modality: item.modality || item.category || 'X-Ray'
+          });
+        });
+      }
+    });
+
+    if (!scans.length) {
+      alert('Diagnostic invoice found, but no imaging test items were listed.');
+      return;
+    }
+
+    const firstScan = scans[0];
+    document.getElementById('radProcedure').value = firstScan.name;
+    if (firstScan.modality && ['X-Ray', 'CT Scan', 'MRI', 'Ultrasound'].includes(firstScan.modality)) {
+      document.getElementById('radModality').value = firstScan.modality;
+    }
+
+    alert(`Loaded imaging test "${firstScan.name}" from Diagnostic Invoice for ${selectedRadiologyPatient.fullName}.`);
+  } catch (err) {
+    console.error('Error loading diagnostic imaging tests:', err);
+    alert('Failed to load tests from diagnostic bill invoices.');
+  }
 }

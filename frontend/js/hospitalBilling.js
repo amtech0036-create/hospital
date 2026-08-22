@@ -16,15 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
 function initBillingSearch() {
   new SearchComponent('#billingSearchContainer', {
     endpoint: '/api/hospital-billing',
-    placeholder: 'Search Invoice ID, Patient UHID, Name...',
+    placeholder: 'Search Invoices by Invoice ID, Patient UHID, Name...',
+    displayFormatter: (item) => `${item.id || 'Invoice'} — ${item.patientName || item.uhid || 'Patient'} (Net: ৳${item.netAmount || 0})`,
+    subFormatter: (item) => `Paid: ৳${item.paidAmount || 0} | Due: ৳${item.dueAmount || 0} | Status: ${item.status || 'Issued'}`,
     onSelect: (item) => {
-      loadInvoices(item.uhid || item.invoiceId);
+      loadInvoices(item.uhid || item.id);
     }
   });
 
   new SearchComponent('#billingModalPatientSearch', {
     endpoint: '/api/patients',
-    placeholder: 'Search patient for master billing...',
+    placeholder: 'Search patient for master billing invoice...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedBillingPatient = patient;
     }

@@ -16,6 +16,8 @@ function initDietSearch() {
   new SearchComponent('#dietSearchContainer', {
     endpoint: '/api/dietetics',
     placeholder: 'Search Diet Plans by UHID, Patient Name, Diet Type...',
+    displayFormatter: (item) => `${item.uhid || 'Diet'} — ${item.patientName || 'Patient'} (${item.dietPlanType || 'Diet'})`,
+    subFormatter: (item) => `Dietician: ${item.dieticianName || 'Dietician'} | Allergies: ${item.allergiesDiet || 'None'}`,
     onSelect: (item) => {
       loadDietPlans(item.uhid);
     }
@@ -24,6 +26,7 @@ function initDietSearch() {
   new SearchComponent('#dietModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for diet assignment...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedDietPatient = patient;
     }

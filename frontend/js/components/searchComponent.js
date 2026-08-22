@@ -14,9 +14,26 @@ class SearchComponent {
       placeholder: 'Search by UHID, Name, Phone, Code...',
       minChars: 1,
       debounceMs: 250,
-      transformResponse: (res) => res.data?.patients || res.data?.doctors || res.data?.items || res.data?.beds || res.data?.tests || res.data || [],
-      displayFormatter: (item) => item.uhid ? `${item.uhid} — ${item.fullName || item.name} (${item.phone || ''})` : (item.name || item.fullName || item.title || JSON.stringify(item)),
-      subFormatter: (item) => item.department || item.category || item.status || '',
+      transformResponse: (res) => {
+        if (!res) return [];
+        const d = res.data;
+        if (Array.isArray(d)) return d;
+        if (!d) return [];
+        return d.patients || d.doctors || d.items || d.beds || d.tests || d.emergencies || 
+               d.nursingLogs || d.orders || d.invoices || d.icuRecords || d.surgeries || 
+               d.bloodInventory || d.records || d.sessions || d.diets || d.equipment || d.logs || [];
+      },
+      displayFormatter: (item) => {
+        if (!item) return '';
+        if (item.uhid) return `${item.uhid} — ${item.fullName || item.patientName || item.name || 'Record'} ${item.phone ? `(${item.phone})` : ''}`;
+        if (item.bagId) return `${item.bagId} — ${item.bloodGroup} (${item.componentType || 'Blood Bag'})`;
+        if (item.assetTag) return `${item.assetTag} — ${item.equipmentName} (${item.department || 'Equipment'})`;
+        if (item.barcode) return `${item.barcode} — ${item.testName || item.patientName || 'Lab Sample'}`;
+        if (item.procedureName) return `${item.procedureName} — ${item.patientName || item.uhid || 'Procedure'}`;
+        if (item.bedNumber) return `${item.bedNumber} — ${item.patientName || 'Bed'}`;
+        return item.name || item.fullName || item.patientName || item.title || item.code || item.id || JSON.stringify(item);
+      },
+      subFormatter: (item) => item.department || item.category || item.status || item.specialty || item.role || '',
       onSelect: (item) => console.log('Selected:', item),
       id: `search_input_${Math.random().toString(36).substr(2, 9)}`
     }, options);
@@ -112,9 +129,13 @@ class SearchComponent {
       const url = new URL(this.options.endpoint, window.location.origin);
       url.searchParams.set(this.options.queryParam, query);
 
+      const token = localStorage.getItem('erp_token') || localStorage.getItem('token') || '';
+      const tenantSubdomain = localStorage.getItem('erp_tenant_subdomain') || 'default';
+
       const res = await fetch(url.toString(), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          'Authorization': token ? `Bearer ${token}` : '',
+          'X-Tenant-Subdomain': tenantSubdomain,
           'Accept': 'application/json'
         }
       });

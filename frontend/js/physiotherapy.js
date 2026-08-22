@@ -16,6 +16,8 @@ function initPhysioSearch() {
   new SearchComponent('#physioSearchContainer', {
     endpoint: '/api/physiotherapy',
     placeholder: 'Search Therapy Sessions by Patient UHID, Name...',
+    displayFormatter: (item) => `${item.uhid || 'Session'} — ${item.patientName || 'Patient'} (${item.treatmentPlan || 'Rehab'})`,
+    subFormatter: (item) => `Therapist: ${item.therapistName || 'Duty Therapist'}`,
     onSelect: (item) => {
       loadPhysioSessions(item.uhid);
     }
@@ -24,6 +26,7 @@ function initPhysioSearch() {
   new SearchComponent('#physioModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for therapy session...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedPhysioPatient = patient;
     }

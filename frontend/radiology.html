@@ -77,7 +77,12 @@
         <div class="modal-body">
           <form id="radiologyForm">
             <div class="mb-3" id="radiologyModalPatientSearch">
-              <label class="form-label fw-bold">Select Patient (Search-First UHID/Name)</label>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold mb-0">Select Patient (Search-First UHID/Name)</label>
+                <button type="button" class="btn btn-sm btn-outline-info" id="btnLoadRadiologyTests" onclick="loadTests()">
+                  <i class="bi bi-cloud-arrow-down me-1"></i> Load Tests (from Diagnostic Bill)
+                </button>
+              </div>
             </div>
 
             <div class="row g-3 mb-3">

@@ -14,6 +14,8 @@ function initBiomedicalSearch() {
   new SearchComponent('#biomedicalSearchContainer', {
     endpoint: '/api/biomedical',
     placeholder: 'Search Asset Tag, Equipment Name, Department...',
+    displayFormatter: (item) => `${item.assetTag || 'Asset'} — ${item.equipmentName} (${item.department || 'General'})`,
+    subFormatter: (item) => `Model: ${item.modelNumber || 'N/A'} | Status: ${item.status || 'Operational'}`,
     onSelect: (item) => {
       loadBiomedicalEquipment(item.assetTag || item.equipmentName);
     }

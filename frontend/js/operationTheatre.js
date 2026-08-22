@@ -16,6 +16,8 @@ function initOtSearch() {
   new SearchComponent('#otSearchContainer', {
     endpoint: '/api/ot',
     placeholder: 'Search OT schedule by UHID, Patient Name, Procedure, OT Room...',
+    displayFormatter: (item) => `${item.otRoom || 'OT'} — ${item.procedureName} (${item.patientName || item.uhid})`,
+    subFormatter: (item) => `Surgeon: ${item.leadSurgeon || 'N/A'} | Status: ${item.status || 'Scheduled'}`,
     onSelect: (item) => {
       loadOtSurgeries(item.uhid || item.otRoom);
     }
@@ -24,6 +26,7 @@ function initOtSearch() {
   new SearchComponent('#otModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for OT surgery...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedOtPatient = patient;
     }

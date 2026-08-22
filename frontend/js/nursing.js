@@ -14,16 +14,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initNursingSearch() {
   new SearchComponent('#nursingPatientSearchContainer', {
-    endpoint: '/api/patients',
+    endpoint: '/api/nursing',
     placeholder: 'Filter nursing logs by Patient UHID, Name...',
-    onSelect: (patient) => {
-      loadNursingLogs(patient.uhid);
+    displayFormatter: (item) => `${item.uhid || 'Log'} — Nurse ${item.nurseName || 'Duty Nurse'}`,
+    subFormatter: (item) => `BP: ${item.vitalSigns?.bp || 'N/A'} | Note: ${item.shiftHandover || 'Checked'}`,
+    onSelect: (item) => {
+      loadNursingLogs(item.uhid);
     }
   });
 
   new SearchComponent('#nursingModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for nursing entry...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedNursingPatient = patient;
     }

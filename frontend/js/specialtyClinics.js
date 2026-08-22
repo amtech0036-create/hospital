@@ -26,6 +26,8 @@ function initSpecialtySearch() {
   new SearchComponent('#specialtySearchContainer', {
     endpoint: '/api/specialty-clinics',
     placeholder: 'Search Specialty Records by UHID, Patient Name, Doctor...',
+    displayFormatter: (item) => `${item.department || 'Specialty'} — ${item.patientName || item.uhid} (${item.doctorName || 'Doctor'})`,
+    subFormatter: (item) => `Notes: ${item.clinicalDetails?.notes || 'Clinical log'}`,
     onSelect: (item) => {
       loadSpecialtyRecords(item.uhid);
     }
@@ -34,6 +36,7 @@ function initSpecialtySearch() {
   new SearchComponent('#specialtyModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for specialty entry...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedSpecialtyPatient = patient;
     }

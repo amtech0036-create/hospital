@@ -3,17 +3,22 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTopbar();
   document.getElementById('pageTitle').textContent = 'Doctor Consultation Workstation';
 
+  initDoctorSearch();
+  loadDoctorQueue();
+  document.getElementById('btnRefreshDoctor').addEventListener('click', loadDoctorQueue);
+});
+
+function initDoctorSearch() {
   new SearchComponent('#doctorPortalSearchContainer', {
     endpoint: '/api/opd',
     placeholder: 'Search Consultation Queue by Patient UHID, Token, Name...',
+    displayFormatter: (item) => `${item.tokenNumber ? `#${item.tokenNumber}` : 'Token'} — ${item.patientName || item.uhid || 'Patient'} (${item.doctorName || 'Doctor'})`,
+    subFormatter: (item) => `Status: ${item.status || 'Waiting'} | Dept: ${item.department || 'OPD'}`,
     onSelect: (item) => {
       loadDoctorQueue(item.uhid);
     }
   });
-
-  loadDoctorQueue();
-  document.getElementById('btnRefreshDoctor').addEventListener('click', loadDoctorQueue);
-});
+}
 
 async function loadDoctorQueue(searchQuery = '') {
   const tbody = document.getElementById('doctorQueueBody');

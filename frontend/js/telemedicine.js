@@ -16,6 +16,8 @@ function initTelemedSearch() {
   new SearchComponent('#telemedSearchContainer', {
     endpoint: '/api/telemedicine',
     placeholder: 'Search Telemedicine sessions by Patient UHID, Name, Doctor...',
+    displayFormatter: (item) => `${item.uhid || 'Telemed'} — ${item.patientName || 'Patient'} (${item.doctorName || 'Doctor'})`,
+    subFormatter: (item) => `Date: ${new Date(item.appointmentDate || item.createdAt).toLocaleDateString()} | Status: ${item.status || 'Scheduled'}`,
     onSelect: (item) => {
       loadTelemedSessions(item.uhid);
     }
@@ -24,6 +26,7 @@ function initTelemedSearch() {
   new SearchComponent('#telemedModalPatientSearch', {
     endpoint: '/api/patients',
     placeholder: 'Search patient for video consultation...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedTelemedPatient = patient;
     }

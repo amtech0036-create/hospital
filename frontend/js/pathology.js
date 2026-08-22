@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function initPathologySearch() {
   new SearchComponent('#pathologySearchContainer', {
     endpoint: '/api/pathology',
-    placeholder: 'Scan Sample Barcode or Search UHID, Patient Name, Test...',
+    placeholder: 'Scan Barcode or Search Lab Worklist by UHID, Patient Name, Test...',
+    displayFormatter: (item) => `${item.barcode || 'Lab Sample'} — ${item.testName || 'Test'} (${item.patientName || item.uhid || 'Patient'})`,
+    subFormatter: (item) => `Category: ${item.category || 'Pathology'} | Status: ${item.status || 'Ordered'}`,
     onSelect: (item) => {
       loadPathologyOrders(item.barcode || item.uhid);
     }
@@ -23,7 +25,8 @@ function initPathologySearch() {
 
   new SearchComponent('#pathologyModalPatientSearch', {
     endpoint: '/api/patients',
-    placeholder: 'Search patient for lab order...',
+    placeholder: 'Search patient for pathology lab test...',
+    displayFormatter: (patient) => `${patient.uhid} — ${patient.fullName} (${patient.phone || ''})`,
     onSelect: (patient) => {
       selectedPathologyPatient = patient;
     }
@@ -116,4 +119,49 @@ async function saveLabOrder() {
 
 function verifyResults(id) {
   alert(`Entering multi-parameter results for lab order ID ${id}`);
+}
+
+async function loadTests() {
+  if (!selectedPathologyPatient || !selectedPathologyPatient.uhid) {
+    alert('Please select a patient first to load diagnostic billed tests.');
+    return;
+  }
+
+  try {
+    const res = await apiFetch(`/api/diagnostics/orders?search=${encodeURIComponent(selectedPathologyPatient.uhid)}`);
+    const orders = res.data || [];
+    
+    if (!orders.length) {
+      alert(`No diagnostic bill invoices found for patient ${selectedPathologyPatient.fullName} (${selectedPathologyPatient.uhid}).`);
+      return;
+    }
+
+    const tests = [];
+    orders.forEach(order => {
+      if (order.items && Array.isArray(order.items)) {
+        order.items.forEach(item => {
+          tests.push({
+            name: item.testName || item.name || item.title || 'Diagnostic Test',
+            category: item.category || 'Pathology',
+            sampleType: item.sampleType || 'EDTA Whole Blood'
+          });
+        });
+      }
+    });
+
+    if (!tests.length) {
+      alert('Diagnostic invoice found, but no pathology test items were listed.');
+      return;
+    }
+
+    const firstTest = tests[0];
+    document.getElementById('labTestName').value = firstTest.name;
+    if (firstTest.category) document.getElementById('labCategory').value = firstTest.category;
+    if (firstTest.sampleType) document.getElementById('labSampleType').value = firstTest.sampleType;
+
+    alert(`Loaded test "${firstTest.name}" from Diagnostic Invoice for ${selectedPathologyPatient.fullName}.`);
+  } catch (err) {
+    console.error('Error loading diagnostic tests:', err);
+    alert('Failed to load tests from diagnostic bill invoices.');
+  }
 }

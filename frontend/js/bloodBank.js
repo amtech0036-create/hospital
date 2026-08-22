@@ -14,6 +14,8 @@ function initBloodBankSearch() {
   new SearchComponent('#bloodBankSearchContainer', {
     endpoint: '/api/blood-bank',
     placeholder: 'Search Blood Group, Bag ID, Donor Name, Patient UHID...',
+    displayFormatter: (item) => `${item.bagId || 'Blood Bag'} — Group ${item.bloodGroup} (${item.componentType || 'Blood'})`,
+    subFormatter: (item) => `Donor: ${item.donorName || 'Voluntary'} | Status: ${item.issueStatus || 'Available'}`,
     onSelect: (item) => {
       loadBloodInventory(item.bloodGroup || item.bagId);
     }
