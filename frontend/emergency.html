@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency Department — Hospital ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Emergency Department (ER)</h4>
+        <p class="text-muted small mb-0">Triage Level 1-5, ER bed assignment, trauma logs & rapid admission.</p>
+      </div>
+      <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#newEmergencyModal">
+        <i class="bi bi-plus-lg me-1"></i> Register ER Patient
+      </button>
+    </div>
+
+    <!-- Triage Filter & Search Row -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-6" id="erPatientSearchContainer">
+            <!-- Search-First Component target -->
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="triageFilter">
+              <option value="">All Triage Levels</option>
+              <option value="1">Level 1 - Resuscitation (Red)</option>
+              <option value="2">Level 2 - Emergent (Orange)</option>
+              <option value="3">Level 3 - Urgent (Yellow)</option>
+              <option value="4">Level 4 - Less Urgent (Green)</option>
+              <option value="5">Level 5 - Non-Urgent (Blue)</option>
+            </select>
+          </div>
+          <div class="col-md-3 text-end">
+            <button class="btn btn-outline-secondary w-100" id="btnRefreshER">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Queue
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency Queue Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Triage Level</th>
+                <th>Patient Details / UHID</th>
+                <th>Bed No.</th>
+                <th>Vitals</th>
+                <th>Chief Complaint</th>
+                <th>Doctor</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="erQueueTableBody">
+              <tr>
+                <td colspan="8" class="text-center py-4 text-muted">Loading emergency queue...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Emergency Patient Modal -->
+  <div class="modal fade" id="newEmergencyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><i class="bi bi-shield-exclamation me-2"></i>Register Emergency Patient</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="emergencyForm">
+            <div class="mb-3" id="modalPatientSearchContainer">
+              <label class="form-label fw-bold">Search Existing Patient (Search-First UHID/Name)</label>
+              <!-- SearchFirst component injected here -->
+            </div>
+            
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Patient Name (If New / Unregistered)</label>
+                <input type="text" class="form-control" id="erPatientName" placeholder="e.g. John Doe or Unknown Male #1" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Triage Level</label>
+                <select class="form-select" id="erTriageLevel">
+                  <option value="1">1 - Resuscitation (Red)</option>
+                  <option value="2">2 - Emergent (Orange)</option>
+                  <option value="3" selected>3 - Urgent (Yellow)</option>
+                  <option value="4">4 - Less Urgent (Green)</option>
+                  <option value="5">5 - Non-Urgent (Blue)</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Bed Number</label>
+                <input type="text" class="form-control" id="erBedNumber" value="ER-Bed-01" />
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <label class="form-label small text-muted">BP (mmHg)</label>
+                <input type="text" class="form-control" id="erBp" placeholder="120/80" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted">Pulse (/min)</label>
+                <input type="text" class="form-control" id="erPulse" placeholder="80" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted">Temp (°F)</label>
+                <input type="text" class="form-control" id="erTemp" placeholder="98.6" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted">SpO2 (%)</label>
+                <input type="text" class="form-control" id="erSpo2" placeholder="99" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted">Attending Doctor</label>
+                <input type="text" class="form-control" id="erDoctor" value="Duty ER Consultant" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Chief Complaint / Injury Details</label>
+              <textarea class="form-control" id="erChiefComplaint" rows="2" placeholder="e.g. Severe chest pain, acute shortness of breath..."></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="btnSaveEmergency">Save & Admit to ER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/components/searchComponent.js"></script>
+  <script src="js/emergency.js"></script>
+</body>
+</html>

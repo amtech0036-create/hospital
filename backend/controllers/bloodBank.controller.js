@@ -2,24 +2,19 @@ const BloodBankService = require('../services/BloodBankService');
 const asyncHandler = require('../utils/asyncHandler');
 const { success } = require('../utils/apiResponse');
 
-const registerBloodUnit = asyncHandler(async (req, res) => {
-  const unit = await BloodBankService.registerBloodUnit(req.body);
-  return success(res, { message: 'Blood unit registered successfully.', data: unit, status: 201 });
+const list = asyncHandler(async (req, res) => {
+  const result = await BloodBankService.list(req.query);
+  return success(res, { message: 'Blood bank inventory & cross-matching records loaded.', data: result.bloodInventory, meta: result.pagination });
 });
 
-const getBloodInventory = asyncHandler(async (req, res) => {
-  const inventory = await BloodBankService.getBloodInventory();
-  return success(res, { message: 'Blood bank inventory loaded.', data: inventory });
+const create = asyncHandler(async (req, res) => {
+  const item = await BloodBankService.create(req.body);
+  return success(res, { message: 'Blood bag collected & stored in inventory.', data: item, status: 201 });
 });
 
-const updateBloodUnitStatus = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const updated = await BloodBankService.updateBloodUnitStatus(id, req.body);
-  return success(res, { message: 'Blood unit status updated.', data: updated });
+const update = asyncHandler(async (req, res) => {
+  const item = await BloodBankService.update(req.params.id, req.body);
+  return success(res, { message: 'Blood bag status / cross-match updated.', data: item });
 });
 
-module.exports = {
-  registerBloodUnit,
-  getBloodInventory,
-  updateBloodUnitStatus
-};
+module.exports = { list, create, update };

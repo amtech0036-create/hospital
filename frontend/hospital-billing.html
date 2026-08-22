@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Central Hospital Billing & Accounts — Hospital ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-receipt text-success me-2"></i>Central Hospital Billing Counter</h4>
+        <p class="text-muted small mb-0">Aggregated billing counter for OPD, IPD, Pharmacy, Diagnostics & ER charges.</p>
+      </div>
+      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newHospitalInvoiceModal">
+        <i class="bi bi-plus-lg me-1"></i> Generate Master Invoice
+      </button>
+    </div>
+
+    <!-- Search-First Component target -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-8" id="billingSearchContainer">
+            <!-- Search-First Component injected here -->
+          </div>
+          <div class="col-md-4 text-end">
+            <button class="btn btn-outline-secondary w-100" id="btnRefreshBilling">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Invoices
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing Invoices Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Invoice ID / Date</th>
+                <th>Patient Details</th>
+                <th>Total Amount</th>
+                <th>Discount</th>
+                <th>Net Payable</th>
+                <th>Paid / Due</th>
+                <th>Payment Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="billingTableBody">
+              <tr>
+                <td colspan="8" class="text-center py-4 text-muted">Loading hospital invoices...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Master Invoice Modal -->
+  <div class="modal fade" id="newHospitalInvoiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Generate Central Hospital Bill</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="billingForm">
+            <div class="mb-3" id="billingModalPatientSearch">
+              <label class="form-label fw-bold">Select Patient (Search-First UHID/Name)</label>
+            </div>
+
+            <h6 class="fw-bold text-dark border-bottom pb-2 mt-3 mb-3">Department Charges Breakdown ($ / ৳)</h6>
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label small">OPD Consultation Fee</label>
+                <input type="number" class="form-control bill-calc" id="billOpd" value="0" min="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">IPD Ward / Bed Charges</label>
+                <input type="number" class="form-control bill-calc" id="billIpd" value="0" min="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Pharmacy Medicines</label>
+                <input type="number" class="form-control bill-calc" id="billPharmacy" value="0" min="0" />
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label small">Pathology & Radiology Tests</label>
+                <input type="number" class="form-control bill-calc" id="billDiagnostics" value="0" min="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Emergency / ER Charges</label>
+                <input type="number" class="form-control bill-calc" id="billEmergency" value="0" min="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Discount Amount</label>
+                <input type="number" class="form-control bill-calc" id="billDiscount" value="0" min="0" />
+              </div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted">Total Gross Amount:</span>
+                <span class="fw-bold" id="lblGrossTotal">৳0.00</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted">Discount Applied:</span>
+                <span class="fw-bold text-danger" id="lblDiscount">৳0.00</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="fw-bold text-dark fs-5">Net Payable Total:</span>
+                <span class="fw-bold text-success fs-5" id="lblNetPayable">৳0.00</span>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Amount Paid Now</label>
+                <input type="number" class="form-control" id="billPaid" value="0" min="0" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Payment Method</label>
+                <select class="form-select" id="billMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Credit/Debit Card</option>
+                  <option value="Mobile Banking">Bkash/Nagad/Mobile Banking</option>
+                  <option value="Insurance">Health Insurance</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="btnSaveInvoice">Generate & Print Receipt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/components/searchComponent.js"></script>
+  <script src="js/hospitalBilling.js"></script>
+</body>
+</html>

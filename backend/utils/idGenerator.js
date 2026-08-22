@@ -71,7 +71,23 @@ const ID_PREFIXES = {
   PATIENT: 'PAT',
   DIAGNOSTIC_TEST: 'DTEST',
   DIAGNOSTIC_ORDER: 'DORD',
-  DIAGNOSTIC_RESULT: 'DRES'
+  DIAGNOSTIC_RESULT: 'DRES',
+  EMERGENCY: 'EMG',
+  NURSING: 'NUR',
+  PHARMACY: 'PHM',
+  PATHOLOGY: 'PTH',
+  RADIOLOGY: 'RAD',
+  BILLING: 'BILL',
+  ICU: 'ICU',
+  OT: 'OT',
+  BLOOD_BANK: 'BB',
+  PHYSIOTHERAPY: 'PT',
+  DENTAL: 'DEN',
+  DIETETICS: 'DIET',
+  MORTUARY: 'MORT',
+  BIOMEDICAL: 'BMED',
+  TELEMEDICINE: 'TELE',
+  AUDIT_LOG: 'AUDIT'
 };
 
 module.exports = { generateId, generateDateBasedId, formatDateForId, extractSequence, ID_PREFIXES };

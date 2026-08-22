@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telemedicine & Video Consultation — Hospital ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-camera-video-fill text-danger me-2"></i>Telemedicine & Video Consultations</h4>
+        <p class="text-muted small mb-0">Online video appointment scheduling, digital prescriptions & online payment processing.</p>
+      </div>
+      <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#newTelemedModal">
+        <i class="bi bi-plus-lg me-1"></i> Schedule Telemedicine Session
+      </button>
+    </div>
+
+    <!-- Search-First Component target -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-8" id="telemedSearchContainer">
+            <!-- Search-First Component injected here -->
+          </div>
+          <div class="col-md-4 text-end">
+            <button class="btn btn-outline-secondary w-100" id="btnRefreshTelemed">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Consultations
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemedicine Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date / Time</th>
+                <th>Patient Details & UHID</th>
+                <th>Doctor</th>
+                <th>Payment Status</th>
+                <th>Video Call Link</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="telemedTableBody">
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">Loading telemedicine consultations...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Telemed Modal -->
+  <div class="modal fade" id="newTelemedModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><i class="bi bi-camera-video me-2"></i>Schedule Telemedicine Video Call</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="telemedForm">
+            <div class="mb-3" id="telemedModalPatientSearch">
+              <label class="form-label fw-bold">Select Patient (Search-First UHID/Name)</label>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Consultant Doctor</label>
+                <input type="text" class="form-control" id="tmDoctor" value="Dr. Telemed Specialist" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Appointment Date/Time</label>
+                <input type="datetime-local" class="form-control" id="tmDate" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="btnSaveTelemed">Schedule & Generate Call Link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/components/searchComponent.js"></script>
+  <script src="js/telemedicine.js"></script>
+</body>
+</html>

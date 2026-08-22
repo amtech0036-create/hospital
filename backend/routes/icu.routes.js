@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/bloodBank.controller');
+const controller = require('../controllers/icu.controller');
 
 router.get('/', controller.list);
 router.post('/', controller.create);
 router.put('/:id', controller.update);
-router.get('/inventory', controller.list);
 
 module.exports = router;

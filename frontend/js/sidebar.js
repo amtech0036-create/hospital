@@ -10,9 +10,40 @@ const SIDEBAR_SECTIONS = [
     title: 'Clinical Operations',
     links: [
       { label: 'OPD Queue', href: '/opd.html' },
+      { label: 'Emergency (ER)', href: '/emergency.html' },
+      { label: 'Nursing Care & MAR', href: '/nursing.html' },
       { label: 'Doctor Prescription', href: '/prescription.html' },
       { label: 'EMR Timeline', href: '/emr.html' },
       { label: 'IPD Ward & Beds', href: '/ipd-beds.html' }
+    ]
+  },
+  {
+    title: 'Advanced Critical Care (Phase 2)',
+    links: [
+      { label: 'ICU / CCU Workstation', href: '/icu.html' },
+      { label: 'Operation Theatre (OT)', href: '/operation-theatre.html' },
+      { label: 'Blood Bank Inventory', href: '/blood-bank.html' },
+      { label: 'Specialty Clinics', href: '/specialty-clinics.html' }
+    ]
+  },
+  {
+    title: 'Supporting & Logistics (Phase 3)',
+    links: [
+      { label: 'Physiotherapy & Rehab', href: '/physiotherapy.html' },
+      { label: 'Dental Department', href: '/dental.html' },
+      { label: 'Nutrition & Dietetics', href: '/dietetics.html' },
+      { label: 'Mortuary Management', href: '/mortuary.html' },
+      { label: 'Biomedical Equipment', href: '/biomedical.html' }
+    ]
+  },
+  {
+    title: 'Digital Services & Portals (Phase 4)',
+    links: [
+      { label: 'Patient Portal', href: '/patient-portal.html' },
+      { label: 'Doctor Workstation', href: '/doctor-portal.html' },
+      { label: 'Telemedicine Video', href: '/telemedicine.html' },
+      { label: 'Executive Analytics', href: '/executive-analytics.html' },
+      { label: 'Audit Log & RBAC', href: '/audit-security.html' }
     ]
   },
   {
@@ -25,9 +56,17 @@ const SIDEBAR_SECTIONS = [
     title: 'Diagnostics (HIS/LIS)',
     links: [
       { label: 'Diagnostic Billing', href: '/diagnostics-billing.html' },
+      { label: 'Pathology Lab', href: '/pathology.html' },
+      { label: 'Radiology & Imaging', href: '/radiology.html' },
       { label: 'Universal Scanner', href: '/diagnostics-scan.html' },
       { label: 'Worklist & Approval', href: '/diagnostics-approval.html' },
       { label: 'Analytics & Commissions', href: '/diagnostics-analytics.html' }
+    ]
+  },
+  {
+    title: 'Hospital Accounts',
+    links: [
+      { label: 'Central Hospital Billing', href: '/hospital-billing.html' }
     ]
   },
   {

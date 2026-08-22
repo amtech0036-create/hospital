@@ -1,83 +1,54 @@
-const { bloodUnitRepository } = require('../repositories');
-const logger = require('../utils/logger');
+const { bloodBankRepo } = require('../repositories');
+const { getCurrentTenantId } = require('../context/tenantContext');
 
 class BloodBankService {
-  /**
-   * POST /api/blood-bank/units
-   * Register new blood unit.
-   */
-  async registerBloodUnit({ bloodGroup, donorId, donorName, collectionDate, expiryDate, notes }) {
-    if (!bloodGroup) {
-      const err = new Error('bloodGroup is required for registering a blood unit.');
-      err.status = 400;
-      throw err;
+  async list({ search, bloodGroup, status, page = 1, limit = 50 } = {}) {
+    let items = await bloodBankRepo.findAll({});
+    if (search) {
+      const q = search.toLowerCase().trim();
+      items = items.filter(i => 
+        (i.donorName || '').toLowerCase().includes(q) ||
+        (i.bloodGroup || '').toLowerCase().includes(q) ||
+        (i.bagId || '').toLowerCase().includes(q) ||
+        (i.crossMatchPatientUhid || '').toLowerCase().includes(q)
+      );
     }
 
-    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await bloodUnitRepository.count({});
-    const unitNumber = `BLD-${todayStr}-${String(count + 1).padStart(4, '0')}`;
+    if (bloodGroup) items = items.filter(i => i.bloodGroup === bloodGroup);
+    if (status) items = items.filter(i => i.status === status);
 
-    const defaultExpiry = new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 35 days standard shelf life
-
-    const unit = await bloodUnitRepository.create({
-      unitNumber,
-      bloodGroup: bloodGroup.toUpperCase(),
-      donorId: donorId || null,
-      donorName: donorName || 'Anonymous Donor',
-      collectionDate: collectionDate || new Date().toISOString().slice(0, 10),
-      expiryDate: expiryDate || defaultExpiry,
-      status: 'available',
-      assignedPatientId: null,
-      assignedUhid: null,
-      notes: notes || ''
-    });
-
-    logger.info(`Blood Unit ${unitNumber} (${bloodGroup}) registered in Blood Bank.`);
-    return unit;
-  }
-
-  /**
-   * GET /api/blood-bank/inventory
-   * Summary of blood stock grouped by blood group.
-   */
-  async getBloodInventory() {
-    const allUnits = await bloodUnitRepository.findAll();
-    const availableUnits = allUnits.filter((u) => u.status === 'available');
-
-    const groups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-    const summary = {};
-
-    groups.forEach((g) => {
-      summary[g] = availableUnits.filter((u) => u.bloodGroup === g).length;
-    });
+    items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const total = items.length;
+    const startIndex = (Number(page) - 1) * Number(limit);
 
     return {
-      totalAvailable: availableUnits.length,
-      summary,
-      allUnits
+      bloodInventory: items.slice(startIndex, startIndex + Number(limit)),
+      pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / limit) || 1 }
     };
   }
 
-  /**
-   * PATCH /api/blood-bank/units/:id/status
-   * Update blood unit status (available, reserved, transfused, discarded).
-   */
-  async updateBloodUnitStatus(unitId, { status, assignedPatientId, assignedUhid }) {
-    const unit = await bloodUnitRepository.findById(unitId);
-    if (!unit) {
-      const err = new Error(`Blood unit not found with ID ${unitId}`);
-      err.status = 404;
-      throw err;
-    }
+  async create(data) {
+    const tenantId = getCurrentTenantId();
+    const count = await bloodBankRepo.count({});
+    const bagId = data.bagId || `BB-BAG-${String(count + 1).padStart(5, '0')}`;
 
-    const updated = await bloodUnitRepository.update(unitId, {
-      status,
-      assignedPatientId: assignedPatientId || unit.assignedPatientId,
-      assignedUhid: assignedUhid || unit.assignedUhid
+    return bloodBankRepo.create({
+      tenantId,
+      bagId,
+      donorName: data.donorName || 'Voluntary Donor',
+      bloodGroup: data.bloodGroup || 'O+',
+      componentType: data.componentType || 'Packed Red Blood Cells (PRBC)',
+      quantityMl: Number(data.quantityMl) || 350,
+      collectionDate: data.collectionDate || new Date().toISOString(),
+      expiryDate: data.expiryDate || new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString(),
+      crossMatchPatientUhid: data.crossMatchPatientUhid || '',
+      issueStatus: data.issueStatus || 'Available',
+      status: 'Active'
     });
+  }
 
-    logger.info(`Blood Unit ${unit.unitNumber} status updated to ${status}`);
-    return updated;
+  async update(id, data) {
+    return bloodBankRepo.update(id, data);
   }
 }
 

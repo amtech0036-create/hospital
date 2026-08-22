@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Physiotherapy & Rehabilitation — Hospital ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-person-walking text-primary me-2"></i>Physiotherapy & Rehabilitation</h4>
+        <p class="text-muted small mb-0">Therapy assessments, treatment plans, progress tracking & session logs.</p>
+      </div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPhysioModal">
+        <i class="bi bi-plus-lg me-1"></i> Log Therapy Session
+      </button>
+    </div>
+
+    <!-- Search-First Component target -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-8" id="physioSearchContainer">
+            <!-- Search-First Component injected here -->
+          </div>
+          <div class="col-md-4 text-end">
+            <button class="btn btn-outline-secondary w-100" id="btnRefreshPhysio">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Sessions
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Physiotherapy Sessions Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Patient Details & UHID</th>
+                <th>Therapist</th>
+                <th>Treatment Plan</th>
+                <th>Progress / Metrics</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="physioTableBody">
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">Loading therapy sessions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Therapy Session Modal -->
+  <div class="modal fade" id="newPhysioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-person-workspace me-2"></i>Record Physiotherapy Session</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="physioForm">
+            <div class="mb-3" id="physioModalPatientSearch">
+              <label class="form-label fw-bold">Select Patient (Search-First UHID/Name)</label>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Therapist Name</label>
+                <input type="text" class="form-control" id="ptTherapist" value="Dr. Senior Physiotherapist" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Treatment Plan</label>
+                <input type="text" class="form-control" id="ptPlan" value="Post-Op Knee Joint Mobility & Ultrasound Therapy" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Session Progress & Exercise Notes</label>
+              <textarea class="form-control" id="ptNotes" rows="3" placeholder="Flexion improved to 90 degrees, 15 mins TENS applied..."></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btnSavePhysio">Save Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/components/searchComponent.js"></script>
+  <script src="js/physiotherapy.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nutrition & Dietetics — Hospital ERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="erpSidebar" class="erp-sidebar"></div>
+
+  <div class="erp-content">
+    <div id="erpTopbar"></div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-egg-fried text-warning me-2"></i>Nutrition & Dietetics Station</h4>
+        <p class="text-muted small mb-0">Ward diet schedules, dietician care notes, special diet plans & allergy warnings.</p>
+      </div>
+      <button class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#newDietModal">
+        <i class="bi bi-plus-lg me-1"></i> Assign Diet Plan
+      </button>
+    </div>
+
+    <!-- Search-First Component target -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-8" id="dietSearchContainer">
+            <!-- Search-First Component injected here -->
+          </div>
+          <div class="col-md-4 text-end">
+            <button class="btn btn-outline-secondary w-100" id="btnRefreshDiet">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Ward Diets
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dietetics Records Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Patient Details & UHID</th>
+                <th>Diet Plan Type</th>
+                <th>Meal Schedule</th>
+                <th>Dietary Allergies</th>
+                <th>Dietician</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dietTableBody">
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">Loading diet plans...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Diet Modal -->
+  <div class="modal fade" id="newDietModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title"><i class="bi bi-cup-hot me-2"></i>Assign Ward Diet Plan</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="dietForm">
+            <div class="mb-3" id="dietModalPatientSearch">
+              <label class="form-label fw-bold">Select Ward Patient (Search-First UHID/Name)</label>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Diet Plan Type</label>
+                <input type="text" class="form-control" id="dietType" value="Diabetic / Low Sodium Soft Diet" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Dietician Name</label>
+                <input type="text" class="form-control" id="dietDietician" value="Chief Dietician Sarah" />
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Meal Schedule</label>
+                <input type="text" class="form-control" id="dietSchedule" value="Breakfast 8:00 AM, Lunch 1:00 PM, Dinner 8:00 PM" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Food Allergies / Restrictions</label>
+                <input type="text" class="form-control" id="dietAllergies" placeholder="e.g. Lactose Intolerant, Peanut Allergy" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-warning text-dark" id="btnSaveDiet">Assign Diet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/components/searchComponent.js"></script>
+  <script src="js/dietetics.js"></script>
+</body>
+</html>
